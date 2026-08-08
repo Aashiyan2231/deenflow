@@ -1,0 +1,127 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: #EEF2FF;
+  color: #1e1b4b;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.app {
+  min-height: 100vh;
+  max-width: 480px;
+  margin: 0 auto;
+  background: #EEF2FF;
+  position: relative;
+}
+
+/* ── NAVBAR ── */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 20px;
+  background: white;
+  border-bottom: 2px solid #e0e7ff;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 4px 20px rgba(99,102,241,0.08);
+}
+
+.navbar h1 {
+  font-size: 20px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #6366f1, #10b981);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.nav-links { display: none; }
+
+.profile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.profile h3 {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e1b4b;
+}
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid #6366f1;
+}
+
+.profile button {
+  background: #fff1f2;
+  border: 1px solid #fecdd3;
+  color: #ef4444;
+  padding: 5px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* ── BOTTOM NAV ── */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  background: white;
+  border-top: 2px solid #e0e7ff;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 8px 0 18px;
+  z-index: 100;
+  box-shadow: 0 -4px 24px rgba(99,102,241,0.1);
+}
+
+.bottom-nav a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  text-decoration: none;
+  color: #94a3b8;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 12px;
+  transition: all 0.2s;
+}
+
+.bottom-nav a.active {
+  color: #6366f1;
+}
+
+.bottom-nav a.active span:first-child {
+  transform: scale(1.25);
+  filter: drop-shadow(0 2px 8px rgba(99,102,241,0.4));
+}
+
+.bottom-nav a span:first-child {
+  font-size: 22px;
+  transition: all 0.2s;
+}

@@ -1,0 +1,1816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>30-Day Life Quest</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root {
+    --deen: #00e5a0;
+    --deen-d: #00b37a;
+    --deen-glow: #00ffb3;
+    --duniya: #6C63FF;
+    --duniya-d: #4a43cc;
+    --duniya-glow: #a78bfa;
+    --Shreer: #FF4D6D;
+    --Shreer-d: #cc2b4a;
+    --Shreer-glow: #ff8fa3;
+    --gold: #FFD60A;
+    --gold-dim: #b89800;
+    --bg: #080B14;
+    --bg2: #0D1120;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --surface3: #222d42;
+    --border: rgba(255,255,255,0.06);
+    --border2: rgba(255,255,255,0.12);
+    --text: #F0F4FF;
+    --text2: #c8d0e7;
+    --muted: #4a5568;
+    --muted2: #667084;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── ANIMATED BACKGROUND ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(ellipse 80% 50% at 20% 20%, rgba(108,99,255,0.07) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 80% 80%, rgba(0,229,160,0.05) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 60% at 50% 50%, rgba(255,77,109,0.03) 0%, transparent 70%);
+  }
+  body::after {
+    content: '';
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-image:
+      linear-gradient(rgba(108,99,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(108,99,255,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(ellipse 100% 100% at 50% 50%, black 40%, transparent 100%);
+  }
+
+  .wrap { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 0 20px 80px; }
+
+  /* ── TABS ── */
+  .main-tabs {
+    display: flex;
+    gap: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 16px;
+    padding: 6px;
+    margin: 20px 0 24px;
+    backdrop-filter: blur(10px);
+  }
+  .tab-btn {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--muted2);
+    padding: 11px 8px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    transition: all 0.3s cubic-bezier(.34,1.56,.64,1);
+  }
+  .tab-btn:hover { color: var(--text); background: var(--surface2); transform: translateY(-1px); }
+  .tab-btn.active {
+    background: linear-gradient(135deg, var(--duniya-d), rgba(108,99,255,0.8));
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(108,99,255,0.35);
+    transform: translateY(-1px);
+  }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; animation: fadeSlideUp 0.35s ease; }
+  @keyframes fadeSlideUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+
+  /* ── HEADER ── */
+  header {
+    text-align: center;
+    padding: 44px 0 20px;
+    position: relative;
+  }
+  .header-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(108,99,255,0.12);
+    border: 1px solid rgba(108,99,255,0.3);
+    border-radius: 100px;
+    padding: 6px 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--duniya-glow);
+    letter-spacing: 3px;
+    margin-bottom: 18px;
+    animation: badgePulse 3s ease-in-out infinite;
+  }
+  @keyframes badgePulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(108,99,255,0); }
+    50% { box-shadow: 0 0 20px 4px rgba(108,99,255,0.15); }
+  }
+  .header-badge::before { content:'◆'; font-size: 8px; }
+  h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-weight: 400;
+    font-size: clamp(42px, 8vw, 86px);
+    background: linear-gradient(135deg, #fff 0%, var(--duniya-glow) 35%, var(--deen-glow) 65%, var(--gold) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 0.95;
+    letter-spacing: 3px;
+  }
+  .arabic {
+    font-size: 22px;
+    color: var(--gold);
+    margin: 12px 0 6px;
+    opacity: 0.85;
+    text-shadow: 0 0 30px rgba(255,214,10,0.3);
+  }
+  .subtitle {
+    color: var(--muted2);
+    font-size: 11px;
+    letter-spacing: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    margin-top: 4px;
+  }
+
+  /* ── STATS BAR ── */
+  .stats-bar {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px;
+    margin: 24px 0;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px 18px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(.34,1.56,.64,1);
+    cursor: default;
+  }
+  .stat-card:hover { transform: translateY(-4px); border-color: var(--border2); }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 3px;
+    border-radius: 16px 16px 0 0;
+  }
+  .stat-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 16px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .stat-card:hover::after { opacity: 1; }
+  .stat-card.xp::before { background: linear-gradient(90deg, var(--gold), #FF6B00); }
+  .stat-card.xp::after { background: radial-gradient(ellipse at 50% 0%, rgba(255,214,10,0.05) 0%, transparent 70%); }
+  .stat-card.streak::before { background: linear-gradient(90deg, var(--Shreer-glow), var(--Shreer)); }
+  .stat-card.streak::after { background: radial-gradient(ellipse at 50% 0%, rgba(255,77,109,0.05) 0%, transparent 70%); }
+  .stat-card.deen-stat::before { background: linear-gradient(90deg, var(--deen), var(--deen-glow)); }
+  .stat-card.deen-stat::after { background: radial-gradient(ellipse at 50% 0%, rgba(0,229,160,0.05) 0%, transparent 70%); }
+  .stat-card.duniya-stat::before { background: linear-gradient(90deg, var(--duniya), var(--duniya-glow)); }
+  .stat-card.duniya-stat::after { background: radial-gradient(ellipse at 50% 0%, rgba(108,99,255,0.05) 0%, transparent 70%); }
+  .stat-card.Shreer-stat::before { background: linear-gradient(90deg, var(--Shreer), var(--Shreer-glow)); }
+  .stat-card.Shreer-stat::after { background: radial-gradient(ellipse at 50% 0%, rgba(255,77,109,0.05) 0%, transparent 70%); }
+  .stat-card.day-stat::before { background: linear-gradient(90deg, var(--duniya-glow), var(--deen-glow)); }
+  .stat-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--muted2);
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+  .stat-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 34px;
+    color: var(--text);
+    line-height: 1;
+    letter-spacing: 1px;
+  }
+  .stat-value.gold { color: var(--gold); }
+  .stat-value.fire { color: var(--Shreer-glow); }
+  .stat-sub { font-size: 11px; color: var(--muted2); margin-top: 5px; font-weight: 400; }
+  .xp-bar-wrap { margin: 6px 0 0; background: rgba(255,255,255,0.06); border-radius: 4px; height: 4px; overflow: hidden; }
+  .xp-bar-fill { height: 100%; background: linear-gradient(90deg, var(--gold), #FF6B00); border-radius: 4px; transition: width 0.8s cubic-bezier(.34,1.56,.64,1); }
+
+  /* ── DATE NAV ── */
+  .date-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 20px;
+    padding: 16px 24px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .date-nav::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, rgba(108,99,255,0.03) 0%, transparent 50%, rgba(0,229,160,0.03) 100%);
+  }
+  .nav-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    color: var(--text2);
+    padding: 10px 22px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    transition: all 0.25s cubic-bezier(.34,1.56,.64,1);
+    position: relative;
+    z-index: 1;
+  }
+  .nav-btn:hover { background: var(--duniya-d); border-color: var(--duniya-glow); color: #fff; transform: scale(1.05); }
+  .nav-btn:disabled { opacity: 0.25; cursor: not-allowed; transform: none; }
+  .current-day-info { text-align: center; position: relative; z-index: 1; }
+  .day-number {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 40px;
+    letter-spacing: 2px;
+    line-height: 1;
+  }
+  .day-number span { color: var(--duniya-glow); }
+  .day-date { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted2); margin-top: 2px; }
+  .day-progress { display: flex; gap: 4px; margin-top: 10px; justify-content: center; flex-wrap: wrap; }
+  .dp-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); transition: all 0.3s; }
+
+  /* ── PILLARS ── */
+  .pillars { display: flex; flex-direction: column; gap: 16px; }
+  .pillar-block {
+    border-radius: 20px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    transition: border-color 0.3s;
+  }
+  .pillar-block:hover { border-color: var(--border2); }
+  .pillar-header {
+    display: flex;
+    align-items: center;
+    padding: 18px 22px;
+    gap: 16px;
+    position: relative;
+    cursor: pointer;
+    user-select: none;
+  }
+  .deen-block .pillar-header { background: linear-gradient(135deg, rgba(0,229,160,0.08) 0%, rgba(0,229,160,0.03) 100%); }
+  .duniya-block .pillar-header { background: linear-gradient(135deg, rgba(108,99,255,0.1) 0%, rgba(108,99,255,0.03) 100%); }
+  .Shreer-block .pillar-header { background: linear-gradient(135deg, rgba(255,77,109,0.08) 0%, rgba(255,77,109,0.03) 100%); }
+
+  .pillar-icon {
+    font-size: 22px;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+  }
+  .deen-block .pillar-icon { background: rgba(0,229,160,0.12); border: 1px solid rgba(0,229,160,0.25); box-shadow: 0 0 20px rgba(0,229,160,0.1); }
+  .duniya-block .pillar-icon { background: rgba(108,99,255,0.12); border: 1px solid rgba(108,99,255,0.25); box-shadow: 0 0 20px rgba(108,99,255,0.1); }
+  .Shreer-block .pillar-icon { background: rgba(255,77,109,0.12); border: 1px solid rgba(255,77,109,0.25); box-shadow: 0 0 20px rgba(255,77,109,0.1); }
+
+  .pillar-title-wrap { flex: 1; position: relative; z-index: 1; }
+  .pillar-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+  }
+  .deen-block .pillar-name { color: var(--deen-glow); }
+  .duniya-block .pillar-name { color: var(--duniya-glow); }
+  .Shreer-block .pillar-name { color: var(--Shreer-glow); }
+  .pillar-sub { font-size: 12px; color: var(--muted2); margin-top: 3px; }
+  .pillar-progress-wrap { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+  .pillar-prog-bar { flex: 1; height: 6px; background: rgba(255,255,255,0.07); border-radius: 6px; overflow: hidden; }
+  .pillar-prog-fill { height: 100%; border-radius: 6px; transition: width 0.6s cubic-bezier(.34,1.56,.64,1); }
+  .deen-block .pillar-prog-fill { background: linear-gradient(90deg, var(--deen-d), var(--deen-glow)); }
+  .duniya-block .pillar-prog-fill { background: linear-gradient(90deg, var(--duniya-d), var(--duniya-glow)); }
+  .Shreer-block .pillar-prog-fill { background: linear-gradient(90deg, var(--Shreer-d), var(--Shreer-glow)); }
+  .pillar-prog-text { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted2); white-space: nowrap; }
+  .pillar-xp-badge {
+    position: relative; z-index: 1;
+    padding: 6px 14px;
+    border-radius: 100px;
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .deen-block .pillar-xp-badge { background: rgba(0,229,160,0.1); border: 1px solid rgba(0,229,160,0.2); color: var(--deen-glow); }
+  .duniya-block .pillar-xp-badge { background: rgba(108,99,255,0.1); border: 1px solid rgba(108,99,255,0.2); color: var(--duniya-glow); }
+  .Shreer-block .pillar-xp-badge { background: rgba(255,77,109,0.1); border: 1px solid rgba(255,77,109,0.2); color: var(--Shreer-glow); }
+  .pillar-tasks { background: var(--surface); }
+  .collapse-arrow { transition: transform 0.35s cubic-bezier(.34,1.56,.64,1); font-size: 11px; color: var(--muted); flex-shrink: 0; position: relative; z-index: 1; }
+  .pillar-block.collapsed .collapse-arrow { transform: rotate(-90deg); }
+  .pillar-block.collapsed .pillar-tasks { display: none; }
+
+  /* ── TASKS ── */
+  .task-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 16px 22px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .task-item:last-child { border-bottom: none; }
+  .task-item:hover { background: rgba(255,255,255,0.025); }
+  .task-item.completed { background: rgba(255,255,255,0.015); }
+  .task-item::before {
+    content: '';
+    position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+    transform: scaleY(0);
+    transition: transform 0.3s cubic-bezier(.34,1.56,.64,1);
+    border-radius: 0 3px 3px 0;
+  }
+  .deen-block .task-item.completed::before { background: var(--deen-glow); transform: scaleY(1); }
+  .duniya-block .task-item.completed::before { background: var(--duniya-glow); transform: scaleY(1); }
+  .Shreer-block .task-item.completed::before { background: var(--Shreer-glow); transform: scaleY(1); }
+
+  .task-checkbox {
+    width: 26px; height: 26px;
+    border-radius: 8px;
+    border: 2px solid rgba(255,255,255,0.15);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 1px;
+    transition: all 0.3s cubic-bezier(.34,1.56,.64,1);
+    font-size: 13px;
+  }
+  .deen-block .task-item.completed .task-checkbox { background: var(--deen); border-color: var(--deen-glow); box-shadow: 0 0 12px rgba(0,229,160,0.4); }
+  .duniya-block .task-item.completed .task-checkbox { background: var(--duniya); border-color: var(--duniya-glow); box-shadow: 0 0 12px rgba(108,99,255,0.4); }
+  .Shreer-block .task-item.completed .task-checkbox { background: var(--Shreer); border-color: var(--Shreer-glow); box-shadow: 0 0 12px rgba(255,77,109,0.4); }
+
+  .task-content { flex: 1; }
+  .task-title { font-weight: 600; font-size: 15px; transition: all 0.25s; color: var(--text2); }
+  .task-item.completed .task-title { text-decoration: line-through; color: var(--muted2); }
+  .task-meta { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+  .tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    padding: 3px 9px;
+    border-radius: 100px;
+    letter-spacing: 0.5px;
+    border: 1px solid;
+    font-weight: 500;
+  }
+  .tag-time { color: var(--muted2); border-color: rgba(255,255,255,0.08); background: rgba(255,255,255,0.04); }
+  .tag-xp { color: var(--gold); border-color: rgba(255,214,10,0.25); background: rgba(255,214,10,0.07); }
+  .deen-block .tag-type { color: var(--deen); border-color: rgba(0,229,160,0.25); background: rgba(0,229,160,0.07); }
+  .duniya-block .tag-type { color: var(--duniya-glow); border-color: rgba(108,99,255,0.25); background: rgba(108,99,255,0.07); }
+  .Shreer-block .tag-type { color: var(--Shreer-glow); border-color: rgba(255,77,109,0.25); background: rgba(255,77,109,0.07); }
+  .task-xp-pop {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px;
+    color: var(--gold);
+    flex-shrink: 0;
+    opacity: 0;
+    transition: opacity 0.3s;
+    letter-spacing: 1px;
+  }
+  .task-item.completed .task-xp-pop { opacity: 1; }
+
+  /* ── CALENDAR ── */
+  .calendar-section {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 20px;
+    padding: 22px;
+    margin-bottom: 24px;
+  }
+  .cal-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--muted2);
+    letter-spacing: 1px;
+    margin-bottom: 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-transform: uppercase;
+  }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+  .cal-day-header {
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--muted);
+    padding-bottom: 8px;
+    letter-spacing: 1px;
+  }
+  .cal-day {
+    aspect-ratio: 1;
+    border-radius: 10px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(.34,1.56,.64,1);
+    position: relative;
+    gap: 2px;
+  }
+  .cal-day:hover { border-color: rgba(255,255,255,0.25); transform: scale(1.08); }
+  .cal-day.past-perfect { background: rgba(0,229,160,0.1); border-color: rgba(0,229,160,0.4); color: var(--deen-glow); }
+  .cal-day.past-good { background: rgba(255,214,10,0.08); border-color: rgba(255,214,10,0.35); color: var(--gold); }
+  .cal-day.past-poor { background: rgba(255,77,109,0.07); border-color: rgba(255,77,109,0.3); }
+  .cal-day.future { opacity: 0.25; cursor: default; pointer-events: none; }
+  .cal-day.active { border-color: var(--gold); color: var(--gold); background: rgba(255,214,10,0.07); box-shadow: 0 0 20px rgba(255,214,10,0.12); }
+  .cal-dots { display: flex; gap: 3px; position: absolute; bottom: 4px; }
+  .cal-dot { width: 4px; height: 4px; border-radius: 50%; }
+
+  /* ── QUOTE ── */
+  .quote-bar {
+    background: linear-gradient(135deg, rgba(108,99,255,0.06) 0%, rgba(0,229,160,0.04) 100%);
+    border: 1px solid rgba(108,99,255,0.15);
+    border-radius: 16px;
+    padding: 18px 24px;
+    margin-bottom: 24px;
+    text-align: center;
+    font-style: italic;
+    font-size: 14px;
+    color: var(--text2);
+    position: relative;
+    overflow: hidden;
+  }
+  .quote-bar::before {
+    content: '"';
+    position: absolute; top: -16px; left: 16px;
+    font-size: 80px;
+    color: var(--duniya-glow);
+    opacity: 0.08;
+    font-family: Georgia, serif;
+    line-height: 1;
+    pointer-events: none;
+  }
+
+  /* ── LEVEL BADGE ── */
+  .level-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, rgba(255,214,10,0.08), rgba(255,107,0,0.08));
+    border: 1px solid rgba(255,214,10,0.25);
+    border-radius: 100px;
+    padding: 8px 20px;
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--gold);
+    margin-bottom: 24px;
+    box-shadow: 0 0 30px rgba(255,214,10,0.08);
+  }
+
+  /* ── XP FLOAT ── */
+  .xp-float {
+    position: fixed;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    font-weight: 400;
+    letter-spacing: 2px;
+    color: var(--gold);
+    pointer-events: none;
+    z-index: 9999;
+    animation: floatUp 1.4s ease-out forwards;
+    text-shadow: 0 0 20px rgba(255,214,10,0.6);
+  }
+  @keyframes floatUp {
+    0% { opacity: 1; transform: translateY(0) scale(0.8); }
+    20% { opacity: 1; transform: translateY(-20px) scale(1.2); }
+    100% { opacity: 0; transform: translateY(-90px) scale(0.9); }
+  }
+
+  /* ── NOTIFICATION ── */
+  .notif {
+    position: fixed;
+    bottom: 28px; right: 28px;
+    background: var(--surface2);
+    border: 1px solid rgba(108,99,255,0.4);
+    border-radius: 16px;
+    padding: 14px 20px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text);
+    z-index: 10000;
+    transform: translateX(120%) translateY(20px);
+    opacity: 0;
+    transition: all 0.45s cubic-bezier(.34,1.56,.64,1);
+    max-width: 300px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(108,99,255,0.1);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .notif.show { transform: translateX(0) translateY(0); opacity: 1; }
+
+  /* ── COMPLETE BADGE ── */
+  .complete-badge { text-align: center; padding: 24px; display: none; }
+  .complete-badge.show { display: block; animation: fadeSlideUp 0.5s ease; }
+  .complete-pulse {
+    display: inline-flex; flex-direction: column; align-items: center; gap: 8px;
+    background: linear-gradient(135deg, rgba(0,229,160,0.08), rgba(108,99,255,0.08));
+    border: 1px solid rgba(0,229,160,0.3);
+    border-radius: 24px;
+    padding: 28px 60px;
+    animation: glow-pulse 2.5s infinite;
+  }
+  @keyframes glow-pulse {
+    0%,100% { box-shadow: 0 0 30px rgba(0,229,160,0.15); }
+    50% { box-shadow: 0 0 60px rgba(0,229,160,0.35); }
+  }
+
+  /* ── RESET BTN ── */
+  .reset-btn {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--muted2);
+    padding: 7px 16px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+  }
+  .reset-btn:hover { border-color: var(--Shreer); color: var(--Shreer-glow); }
+
+  /* ── ANALYTICS ── */
+  .analytics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  @media (max-width: 640px) { .analytics-grid { grid-template-columns: 1fr; } }
+  .ana-card { background: var(--surface); border: 1px solid var(--border2); border-radius: 20px; padding: 20px; }
+  .ana-card-full { background: var(--surface); border: 1px solid var(--border2); border-radius: 20px; padding: 20px; margin-bottom: 16px; }
+  .ana-title { font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700; color: var(--muted2); letter-spacing: 2px; margin-bottom: 16px; text-transform: uppercase; }
+  .chart-wrap { position: relative; width: 100%; }
+  .weak-list { display: flex; flex-direction: column; gap: 12px; }
+  .weak-item { display: flex; align-items: center; gap: 12px; }
+  .weak-bar-bg { flex: 1; height: 8px; background: rgba(255,255,255,0.06); border-radius: 4px; overflow: hidden; }
+  .weak-bar-fill { height: 100%; border-radius: 4px; transition: width 0.9s cubic-bezier(.34,1.56,.64,1); }
+  .weak-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted2); width: 90px; text-align: right; }
+  .weak-pct { font-family: 'Bebas Neue', sans-serif; font-size: 15px; width: 36px; text-align: right; }
+  .heatmap-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+  .hm-cell { aspect-ratio: 1; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 700; border: 1px solid transparent; cursor: default; transition: all 0.2s; position: relative; }
+  .hm-cell:hover .hm-tip { display: block; }
+  .hm-tip { display: none; position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: var(--surface2); border: 1px solid var(--border2); border-radius: 10px; padding: 8px 12px; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text); white-space: nowrap; z-index: 10; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+  .hm-0 { background: rgba(255,255,255,0.03); border-color: var(--border); color: var(--muted); }
+  .hm-1 { background: rgba(255,77,109,0.12); border-color: rgba(255,77,109,0.3); color: var(--Shreer-glow); }
+  .hm-2 { background: rgba(255,214,10,0.1); border-color: rgba(255,214,10,0.3); color: var(--gold); }
+  .hm-3 { background: rgba(0,229,160,0.12); border-color: rgba(0,229,160,0.35); color: var(--deen-glow); }
+  .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
+  @media (max-width: 640px) { .summary-grid { grid-template-columns: repeat(2, 1fr); } }
+  .sum-card { background: var(--surface2); border-radius: 16px; padding: 16px; text-align: center; border: 1px solid var(--border); }
+  .sum-val { font-family: 'Bebas Neue', sans-serif; font-size: 32px; letter-spacing: 1px; }
+  .sum-lbl { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--muted2); letter-spacing: 1px; margin-top: 4px; }
+
+  /* ── LEADERBOARD ── */
+  .lb-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+  .lb-setup { background: var(--surface); border: 1px solid var(--border2); border-radius: 20px; padding: 22px; margin-bottom: 20px; }
+  .lb-setup h3 { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 800; color: var(--duniya-glow); letter-spacing: 1px; margin-bottom: 14px; }
+  .lb-row { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+  .lb-input { background: var(--surface2); border: 1px solid var(--border2); color: var(--text); padding: 11px 16px; border-radius: 12px; font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 600; flex: 1; min-width: 140px; outline: none; transition: border-color 0.2s; }
+  .lb-input:focus { border-color: var(--duniya-glow); box-shadow: 0 0 0 3px rgba(108,99,255,0.15); }
+  .lb-btn { background: var(--duniya-d); border: 1px solid var(--duniya-glow); color: #fff; padding: 11px 22px; border-radius: 12px; cursor: pointer; font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.5px; transition: all 0.25s cubic-bezier(.34,1.56,.64,1); white-space: nowrap; }
+  .lb-btn:hover { background: var(--duniya); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(108,99,255,0.35); }
+  .lb-btn.danger { background: rgba(255,77,109,0.12); border-color: rgba(255,77,109,0.4); color: var(--Shreer-glow); }
+  .lb-btn.danger:hover { background: rgba(255,77,109,0.25); box-shadow: 0 6px 20px rgba(255,77,109,0.2); }
+  .lb-table { background: var(--surface); border: 1px solid var(--border2); border-radius: 20px; overflow: hidden; }
+  .lb-header-row { display: grid; grid-template-columns: 48px 1fr 90px 90px 90px 70px; background: var(--surface2); padding: 12px 18px; font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--muted); letter-spacing: 1px; }
+  .lb-entry { display: grid; grid-template-columns: 48px 1fr 90px 90px 90px 70px; padding: 16px 18px; border-bottom: 1px solid var(--border); align-items: center; transition: background 0.2s; }
+  .lb-entry:last-child { border-bottom: none; }
+  .lb-entry:hover { background: rgba(255,255,255,0.025); }
+  .lb-entry.you { background: rgba(108,99,255,0.06); border-left: 3px solid var(--duniya-glow); }
+  .lb-rank { font-family: 'Bebas Neue', sans-serif; font-size: 22px; }
+  .rank-1 { color: var(--gold); }
+  .rank-2 { color: #90CAF9; }
+  .rank-3 { color: var(--Shreer-glow); }
+  .rank-other { color: var(--muted); }
+  .lb-name { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; }
+  .lb-name .you-tag { font-family: 'JetBrains Mono', monospace; font-size: 8px; color: var(--duniya-glow); background: rgba(108,99,255,0.15); border: 1px solid rgba(108,99,255,0.3); border-radius: 100px; padding: 2px 7px; margin-left: 7px; vertical-align: middle; }
+  .lb-xp { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: var(--gold); letter-spacing: 1px; }
+  .lb-streak { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: var(--Shreer-glow); letter-spacing: 1px; }
+  .lb-pct { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 1px; }
+  .lb-level { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted2); }
+  .lb-empty { text-align: center; padding: 48px 20px; color: var(--muted); font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+  .challenge-box { background: linear-gradient(135deg, rgba(108,99,255,0.07), rgba(0,229,160,0.04)); border: 1px solid rgba(108,99,255,0.2); border-radius: 20px; padding: 22px; margin-bottom: 20px; }
+  .challenge-box h3 { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 800; color: var(--duniya-glow); letter-spacing: 1px; margin-bottom: 8px; }
+  .challenge-progress { display: flex; gap: 14px; margin-top: 16px; flex-wrap: wrap; }
+  .cp-item { flex: 1; min-width: 120px; }
+  .cp-name { font-size: 11px; color: var(--muted2); margin-bottom: 5px; font-family: 'JetBrains Mono', monospace; }
+  .cp-bar-bg { height: 10px; background: rgba(255,255,255,0.06); border-radius: 5px; overflow: hidden; }
+  .cp-bar-fill { height: 100%; border-radius: 5px; transition: width 0.7s cubic-bezier(.34,1.56,.64,1); }
+  .cp-score { font-family: 'Bebas Neue', sans-serif; font-size: 18px; font-weight: 400; margin-top: 5px; letter-spacing: 1px; }
+  .share-section { background: var(--surface); border: 1px solid var(--border2); border-radius: 20px; padding: 22px; margin-top: 16px; }
+  .share-section h3 { font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700; color: var(--muted2); letter-spacing: 1px; margin-bottom: 12px; text-transform: uppercase; }
+  .share-code { font-family: 'JetBrains Mono', monospace; font-size: 11px; background: var(--surface2); border: 1px solid var(--border2); border-radius: 12px; padding: 12px 16px; color: var(--duniya-glow); word-break: break-all; margin-bottom: 12px; }
+  .copy-btn { background: transparent; border: 1px solid var(--border2); color: var(--muted2); padding: 8px 16px; border-radius: 10px; cursor: pointer; font-family: 'JetBrains Mono', monospace; font-size: 10px; transition: all 0.2s; }
+  .copy-btn:hover { border-color: var(--duniya-glow); color: var(--duniya-glow); }
+
+  /* ── CUSTOM DUNIYA TASK FORM ── */
+  .duniya-add-wrap {
+    padding: 20px 22px;
+    background: linear-gradient(135deg, rgba(108,99,255,0.06) 0%, rgba(108,99,255,0.02) 100%);
+    border-top: 1px solid rgba(108,99,255,0.12);
+  }
+  .duniya-add-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--duniya-glow);
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .duniya-add-title::before { content: '✦'; font-size: 10px; }
+  .duniya-add-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .duniya-input {
+    background: var(--surface2);
+    border: 1px solid rgba(108,99,255,0.2);
+    color: var(--text);
+    padding: 10px 15px;
+    border-radius: 12px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    outline: none;
+    transition: all 0.25s;
+  }
+  .duniya-input::placeholder { color: var(--muted); }
+  .duniya-input:focus { border-color: var(--duniya-glow); box-shadow: 0 0 0 3px rgba(108,99,255,0.12); }
+  .duniya-input.task-name { flex: 1; min-width: 160px; }
+  .duniya-input.task-time { width: 120px; }
+  .duniya-add-btn {
+    background: linear-gradient(135deg, var(--duniya-d), rgba(108,99,255,0.9));
+    border: none;
+    color: #fff;
+    padding: 10px 22px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    transition: all 0.3s cubic-bezier(.34,1.56,.64,1);
+    white-space: nowrap;
+    box-shadow: 0 4px 16px rgba(108,99,255,0.3);
+  }
+  .duniya-add-btn:hover { transform: translateY(-2px) scale(1.03); box-shadow: 0 8px 24px rgba(108,99,255,0.45); }
+  .duniya-add-btn:active { transform: translateY(0) scale(0.98); }
+  .duniya-xp-hint {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted2);
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .duniya-xp-hint span { color: var(--gold); font-weight: 700; }
+  .duniya-empty {
+    padding: 36px 20px;
+    text-align: center;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px;
+    color: var(--muted2);
+  }
+  .duniya-empty div { font-size: 36px; margin-bottom: 10px; }
+  .task-delete-btn {
+    background: transparent;
+    border: none;
+    color: rgba(255,255,255,0.15);
+    font-size: 14px;
+    cursor: pointer;
+    padding: 5px 7px;
+    border-radius: 8px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+  .task-delete-btn:hover { color: var(--Shreer-glow); background: rgba(255,77,109,0.1); }
+
+  footer {
+    text-align: center;
+    padding: 28px 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+    margin-top: 40px;
+    letter-spacing: 1px;
+  }
+  footer span { color: var(--gold); }
+
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 5px; }
+
+  @media (max-width: 600px) {
+    .stats-bar { grid-template-columns: repeat(3, 1fr); }
+    .lb-header-row, .lb-entry { grid-template-columns: 36px 1fr 70px 70px; }
+    .lb-header-row > :nth-child(n+5), .lb-entry > :nth-child(n+5) { display: none; }
+    h1 { font-size: 36px; }
+    .duniya-add-row { flex-direction: column; }
+    .duniya-input.task-time { width: 100%; }
+  }
+
+  /* ── PARTICLE SPARKLES ── */
+  @keyframes sparkle {
+    0%,100% { opacity:0; transform: scale(0) rotate(0deg); }
+    50% { opacity:1; transform: scale(1) rotate(180deg); }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="header-badge">OPERATION LIFE UPGRADE · JUNE 2025</div>
+    <div class="arabic">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</div>
+    <h1>30-DAY LIFE QUEST</h1>
+    <div class="subtitle">DEEN · DUNIYA · Shreer — YOUR TRANSFORMATION BEGINS</div>
+  </header>
+
+  <div style="text-align:center;">
+    <div class="level-badge" id="levelBadge">⚔️ LEVEL 1 — INITIATE</div>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat-card xp">
+      <div class="stat-label">TOTAL XP</div>
+      <div class="stat-value gold" id="totalXP">0</div>
+      <div class="xp-bar-wrap"><div class="xp-bar-fill" id="xpBar" style="width:0%"></div></div>
+      <div class="stat-sub" id="xpToNext">0 / 100 to next level</div>
+    </div>
+    <div class="stat-card streak">
+      <div class="stat-label">🔥 STREAK</div>
+      <div class="stat-value fire" id="streakVal">0</div>
+      <div class="stat-sub">days in a row</div>
+    </div>
+    <div class="stat-card deen-stat">
+      <div class="stat-label">☪ DEEN XP</div>
+      <div class="stat-value" id="deenXP" style="color:var(--deen-glow)">0</div>
+      <div class="stat-sub">faith points</div>
+    </div>
+    <div class="stat-card duniya-stat">
+      <div class="stat-label">📚 DUNIYA XP</div>
+      <div class="stat-value" id="duniyaXP" style="color:var(--duniya-glow)">0</div>
+      <div class="stat-sub">study points</div>
+    </div>
+    <div class="stat-card Shreer-stat">
+      <div class="stat-label">💪 Shreer XP</div>
+      <div class="stat-value" id="ShreerXP" style="color:var(--Shreer-glow)">0</div>
+      <div class="stat-sub">health points</div>
+    </div>
+    <div class="stat-card day-stat">
+      <div class="stat-label">📅 DAY</div>
+      <div class="stat-value" id="dayScore">—</div>
+      <div class="stat-sub" id="dayScoreLabel">today's score</div>
+    </div>
+  </div>
+
+  <!-- MAIN TABS -->
+  <div class="main-tabs">
+    <button class="tab-btn active" onclick="switchTab('quest')">⚔️ DAILY QUEST</button>
+    <button class="tab-btn" onclick="switchTab('analytics')">📊 ANALYTICS</button>
+    <button class="tab-btn" onclick="switchTab('leaderboard')">🏆 LEADERBOARD</button>
+  </div>
+
+  <!-- ══ QUEST TAB ══ -->
+  <div class="tab-panel active" id="tab-quest">
+    <div class="quote-bar" id="quoteBar"></div>
+
+    <div class="calendar-section">
+      <div class="cal-title">
+        <span>📅 JUNE 2025 — 30 DAY MISSION MAP</span>
+        <button class="reset-btn" onclick="resetDay()">RESET TODAY</button>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+      <div style="display:flex;gap:16px;margin-top:12px;flex-wrap:wrap;">
+        <span style="font-size:11px;color:var(--muted);font-family:'Share Tech Mono',monospace;">
+          <span style="color:var(--deen-glow)">■</span> PERFECT &nbsp;
+          <span style="color:var(--gold)">■</span> GOOD &nbsp;
+          <span style="color:var(--Shreer)">■</span> TRIED &nbsp;
+          <span style="color:var(--gold)">◈</span> SELECTED
+        </span>
+      </div>
+    </div>
+
+    <div class="date-nav">
+      <button class="nav-btn" id="prevBtn" onclick="changeDay(-1)">◀ PREV</button>
+      <div class="current-day-info">
+        <div class="day-number">DAY <span id="currentDayNum">1</span></div>
+        <div class="day-date" id="currentDayDate">June 1, 2025</div>
+        <div class="day-progress" id="dayProgressDots"></div>
+      </div>
+      <button class="nav-btn" id="nextBtn" onclick="changeDay(1)">NEXT ▶</button>
+    </div>
+
+    <div class="pillars" id="pillarsWrap"></div>
+
+    <div class="complete-badge" id="completeBadge">
+      <div class="complete-pulse">
+        <div style="font-size:40px;">🏆</div>
+        <div style="font-family:'Orbitron',monospace;font-size:16px;color:var(--deen-glow);letter-spacing:2px;">DAY COMPLETE!</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:4px;" id="completeMsg"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ ANALYTICS TAB ══ -->
+  <div class="tab-panel" id="tab-analytics">
+
+    <div class="summary-grid" id="summaryGrid"></div>
+
+    <div class="ana-card-full">
+      <div class="ana-title">📈 DAILY COMPLETION RATE — 30 DAYS</div>
+      <div class="chart-wrap" style="height:200px;">
+        <canvas id="completionChart" role="img" aria-label="Daily completion percentage over 30 days">Completion chart loading…</canvas>
+      </div>
+    </div>
+
+    <div class="analytics-grid">
+      <div class="ana-card">
+        <div class="ana-title">⚡ XP BY PILLAR</div>
+        <div class="chart-wrap" style="height:180px;">
+          <canvas id="pillarChart" role="img" aria-label="XP earned by pillar">Pillar chart loading…</canvas>
+        </div>
+      </div>
+      <div class="ana-card">
+        <div class="ana-title">🎯 WEAK SPOTS — TASK COMPLETION</div>
+        <div class="weak-list" id="weakList"></div>
+      </div>
+    </div>
+
+    <div class="ana-card-full">
+      <div class="ana-title">🌡️ CONSISTENCY HEATMAP — ALL 30 DAYS</div>
+      <div style="display:flex;gap:10px;margin-bottom:10px;font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);">
+        <span><span class="hm-cell hm-0" style="display:inline-block;width:12px;height:12px;border-radius:2px;vertical-align:middle;"></span> 0%</span>
+        <span><span class="hm-cell hm-1" style="display:inline-block;width:12px;height:12px;border-radius:2px;vertical-align:middle;"></span> 1–49%</span>
+        <span><span class="hm-cell hm-2" style="display:inline-block;width:12px;height:12px;border-radius:2px;vertical-align:middle;"></span> 50–79%</span>
+        <span><span class="hm-cell hm-3" style="display:inline-block;width:12px;height:12px;border-radius:2px;vertical-align:middle;"></span> 80–100%</span>
+      </div>
+      <div class="heatmap-grid" id="heatmapGrid"></div>
+    </div>
+
+  </div>
+
+  <!-- ══ LEADERBOARD TAB ══ -->
+  <div class="tab-panel" id="tab-leaderboard">
+
+    <div class="lb-setup">
+      <h3>⚙️ SET YOUR PLAYER NAME</h3>
+      <div class="lb-row">
+        <input class="lb-input" id="playerNameInput" type="text" placeholder="Enter your player name…" maxlength="20">
+        <button class="lb-btn" onclick="savePlayerName()">SAVE NAME</button>
+      </div>
+      <div style="font-size:12px;color:var(--muted);font-family:'Share Tech Mono',monospace;" id="currentNameDisplay"></div>
+    </div>
+
+    <div class="challenge-box" id="challengeBox"></div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+      <div style="font-family:'Orbitron',monospace;font-size:13px;color:var(--muted);letter-spacing:2px;">🏆 GLOBAL RANKINGS</div>
+      <div style="display:flex;gap:8px;">
+        <button class="lb-btn" onclick="addFakeOpponent()">+ ADD RIVAL</button>
+        <button class="lb-btn danger" onclick="clearRivals()">CLEAR RIVALS</button>
+      </div>
+    </div>
+
+    <div class="lb-table" id="lbTable"></div>
+
+    <div class="share-section">
+      <h3>📤 CHALLENGE A FRIEND</h3>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:10px;">Share your progress code. Your friend pastes it to add you as a rival.</p>
+      <div class="share-code" id="shareCode">—</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="copy-btn" onclick="copyShareCode()">📋 COPY CODE</button>
+        <button class="lb-btn" onclick="pasteRivalCode()">📥 PASTE RIVAL CODE</button>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    CLICK TASKS TO COMPLETE · DATA SAVED IN BROWSER · BUILT FOR YOUR TRANSFORMATION<br>
+    <span style="color:var(--gold)">وَقُل رَّبِّ زِدْنِي عِلْمًا</span> — "O Lord, increase me in knowledge" (20:114)
+  </footer>
+</div>
+
+<div class="notif" id="notif"></div>
+
+<script>
+/* ══════════════════════════════════════════
+   DATA
+══════════════════════════════════════════ */
+const QUOTES = [
+  { q: "Verily, with hardship comes ease.", src: "Quran 94:6" },
+  { q: "The best of you are those who are best in character.", src: "Prophet Muhammad ﷺ" },
+  { q: "Seek knowledge from the cradle to the grave.", src: "Islamic Proverb" },
+  { q: "Your body has a right over you.", src: "Prophet Muhammad ﷺ" },
+  { q: "Indeed, Allah does not change the condition of a people until they change themselves.", src: "Quran 13:11" },
+  { q: "Whoever treads a path seeking knowledge, Allah makes easy a path to Paradise.", src: "Hadith" },
+  { q: "Discipline is choosing between what you want now and what you want most.", src: "Abraham Lincoln" },
+  { q: "The pain of discipline is far less than the pain of regret.", src: "Wisdom" },
+  { q: "Rise and pray Fajr. The day belongs to those who start it right.", src: "Islamic Wisdom" },
+];
+
+const LEVELS = [
+  { name:"INITIATE", min:0, max:100 },
+  { name:"APPRENTICE", min:100, max:250 },
+  { name:"SCHOLAR", min:250, max:500 },
+  { name:"WARRIOR", min:500, max:900 },
+  { name:"GUARDIAN", min:900, max:1400 },
+  { name:"SAGE", min:1400, max:2000 },
+  { name:"MASTER", min:2000, max:2700 },
+  { name:"LEGEND", min:2700, max:99999 },
+];
+const LEVEL_ICONS = ["⚔️","🛡️","📖","🗡️","🦅","🔮","👑","🌟"];
+
+const TASKS_BY_WEEK = {
+  w1: {
+    deen: [
+      { id:"d1", title:"Fajr Salah", xp:30, tag:"SALAH" },
+      { id:"d2", title:"Dhuhr Salah", xp:25, tag:"SALAH" },
+      { id:"d3", title:"Asr Salah", xp:25, tag:"SALAH" },
+      { id:"d4", title:"Maghrib Salah", xp:25, tag:"SALAH" },
+      { id:"d5", title:"Isha Salah", xp:25, tag:"SALAH" },
+      { id:"d6", title:"Tahajjud", xp:35, tag:"SALAH" },
+      { id:"d7", title:"Quran Recitation", xp:30, tag:"QURAN" },
+      { id:"d8", title:"Islamic Study", xp:30, tag:"ILMU" },
+    ],
+
+    duniya: [],
+
+    Shreer: [
+      { id:"s1", title:"Morning run / gym / stretch (30–60 min)", xp:35, tag:"EXERCISE" },
+      { id:"s2", title:"Healthy breakfast — no junk", xp:20, tag:"DIET" },
+      { id:"s3", title:"Drink 3+ litres of water today", xp:15, tag:"HYDRATION" },
+      { id:"s4", title:"No doomscrolling — max 2 hr phone", xp:25, tag:"MINDSET" },
+      { id:"s5", title:"Read physical book / solve puzzle (30 min)", xp:20, tag:"MIND" },
+      { id:"s6", title:"Screen-free 1 hour before sleep", xp:20, tag:"SLEEP" },
+      { id:"s7", title:"Sleep by 12:00 AM", xp:25, tag:"SLEEP" },
+    ]
+  },
+
+  w2: {
+    deen: [
+      { id:"d1", title:"Fajr Salah", xp:30, tag:"SALAH" },
+      { id:"d2", title:"Dhuhr Salah", xp:25, tag:"SALAH" },
+      { id:"d3", title:"Asr Salah", xp:25, tag:"SALAH" },
+      { id:"d4", title:"Maghrib Salah", xp:25, tag:"SALAH" },
+      { id:"d5", title:"Isha Salah", xp:25, tag:"SALAH" },
+      { id:"d6", title:"Tahajjud", xp:40, tag:"SALAH" },
+      { id:"d7", title:"Quran Recitation", xp:35, tag:"QURAN" },
+      { id:"d8", title:"Islamic Study", xp:35, tag:"ILMU" },
+    ],
+
+    duniya: [],
+
+    Shreer: [
+      { id:"s1", title:"Exercise per weekly schedule", xp:35, tag:"EXERCISE" },
+      { id:"s2", title:"Protein-rich healthy meals all day", xp:20, tag:"DIET" },
+      { id:"s3", title:"3+ litres water + no sugary drinks", xp:15, tag:"HYDRATION" },
+      { id:"s4", title:"Phone screen time under 2 hrs", xp:30, tag:"MINDSET" },
+      { id:"s5", title:"Read book / chess / puzzle (30 min)", xp:20, tag:"MIND" },
+      { id:"s6", title:"No phone at dinner table", xp:15, tag:"HABIT" },
+      { id:"s7", title:"Sleep by 12:00 AM", xp:25, tag:"SLEEP" },
+    ]
+  },
+
+  w3: {
+    deen: [
+      { id:"d1", title:"Fajr Salah", xp:35, tag:"SALAH" },
+      { id:"d2", title:"Dhuhr Salah", xp:30, tag:"SALAH" },
+      { id:"d3", title:"Asr Salah", xp:30, tag:"SALAH" },
+      { id:"d4", title:"Maghrib Salah", xp:30, tag:"SALAH" },
+      { id:"d5", title:"Isha Salah", xp:30, tag:"SALAH" },
+      { id:"d6", title:"Tahajjud", xp:45, tag:"SALAH" },
+      { id:"d7", title:"Quran Recitation", xp:40, tag:"QURAN" },
+      { id:"d8", title:"Islamic Study", xp:40, tag:"ILMU" },
+    ],
+
+    duniya: [],
+
+    Shreer: [
+      { id:"s1", title:"Exercise — push harder +5 min", xp:40, tag:"EXERCISE" },
+      { id:"s2", title:"Meal prep for tomorrow (10 min)", xp:20, tag:"DIET" },
+      { id:"s3", title:"3+ litres water", xp:15, tag:"HYDRATION" },
+      { id:"s4", title:"Phone usage tracked + logged", xp:25, tag:"MINDSET" },
+      { id:"s5", title:"Book / chess / puzzle (30 min)", xp:20, tag:"MIND" },
+      { id:"s6", title:"Gratitude journal — 3 entries tonight", xp:20, tag:"JOURNAL" },
+      { id:"s7", title:"Sleep by 12:00 AM", xp:25, tag:"SLEEP" },
+    ]
+  },
+
+  w4: {
+    deen: [
+      { id:"d1", title:"Fajr Salah", xp:40, tag:"SALAH" },
+      { id:"d2", title:"Dhuhr Salah", xp:35, tag:"SALAH" },
+      { id:"d3", title:"Asr Salah", xp:35, tag:"SALAH" },
+      { id:"d4", title:"Maghrib Salah", xp:35, tag:"SALAH" },
+      { id:"d5", title:"Isha Salah", xp:35, tag:"SALAH" },
+      { id:"d6", title:"Tahajjud", xp:50, tag:"SALAH" },
+      { id:"d7", title:"Quran Recitation", xp:45, tag:"QURAN" },
+      { id:"d8", title:"Islamic Study", xp:45, tag:"ILMU" },
+    ],
+
+    duniya: [],
+
+    Shreer: [
+      { id:"s1", title:"Best workout of the month — personal record!", xp:50, tag:"EXERCISE" },
+      { id:"s2", title:"Clean eating — review diet improvements", xp:20, tag:"DIET" },
+      { id:"s3", title:"3+ litres water", xp:15, tag:"HYDRATION" },
+      { id:"s4", title:"30-day screen time comparison — improved?", xp:30, tag:"MINDSET" },
+      { id:"s5", title:"Final book chapter / win chess / beat puzzle", xp:25, tag:"MIND" },
+      { id:"s6", title:"Celebrate — you earned it! (planned reward)", xp:20, tag:"REWARD" },
+      { id:"s7", title:"Sleep by 12:00 AM — consistent till the end", xp:25, tag:"SLEEP" },
+    ]
+  }
+};
+
+/* ══════════════════════════════════════════
+   STATE
+══════════════════════════════════════════ */
+const STORAGE_KEY = "lifequest_2025_v2";
+let state = {
+  completedTasks: {},
+  xp: { total:0, deen:0, duniya:0, Shreer:0 },
+  streak: 0,
+  lastCompleted: null,
+  viewDay: 1,
+  playerName: "",
+  rivals: [],  // [{name, xp, streak, pct, level}]
+  customDuniyaTasks: [],  // [{id, title, time, xp}] — user-defined, shared across all days
+};
+
+function loadState() {
+  try { const s = localStorage.getItem(STORAGE_KEY); if (s) state = { ...state, ...JSON.parse(s) }; } catch(e) {}
+}
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
+}
+
+/* ══════════════════════════════════════════
+   HELPERS
+══════════════════════════════════════════ */
+function getWeekTasks(day) {
+  let base;
+  if (day <= 7) base = TASKS_BY_WEEK.w1;
+  else if (day <= 14) base = TASKS_BY_WEEK.w2;
+  else if (day <= 21) base = TASKS_BY_WEEK.w3;
+  else base = TASKS_BY_WEEK.w4;
+  // Always inject custom duniya tasks
+  return { ...base, duniya: state.customDuniyaTasks };
+}
+function getDayDate(day) {
+  return new Date(2025, 5, day).toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
+}
+function getDayTasks(day) { return state.completedTasks[`day-${day}`] || {}; }
+
+function getDayScore(day) {
+  const tasks = getDayTasks(day);
+  const all = getWeekTasks(day);
+  const total = all.deen.length + all.duniya.length + all.Shreer.length;
+  const done = Object.values(tasks).filter(Boolean).length;
+  return { done, total, pct: total > 0 ? Math.round(done/total*100) : 0 };
+}
+function getLevel(xp) {
+  const x = xp !== undefined ? xp : state.xp.total;
+  for (let i = LEVELS.length-1; i >= 0; i--) if (x >= LEVELS[i].min) return { ...LEVELS[i], idx: i };
+  return { ...LEVELS[0], idx: 0 };
+}
+
+/* ══════════════════════════════════════════
+   TASK LOGIC
+══════════════════════════════════════════ */
+function setTaskComplete(day, taskId, pillar, xpVal) {
+  if (!state.completedTasks[`day-${day}`]) state.completedTasks[`day-${day}`] = {};
+  const already = state.completedTasks[`day-${day}`][taskId];
+  if (already) {
+    state.completedTasks[`day-${day}`][taskId] = false;
+    state.xp.total = Math.max(0, state.xp.total - xpVal);
+    state.xp[pillar] = Math.max(0, state.xp[pillar] - xpVal);
+  } else {
+    state.completedTasks[`day-${day}`][taskId] = true;
+    state.xp.total += xpVal;
+    state.xp[pillar] += xpVal;
+    showXPFloat(xpVal);
+  }
+  saveState();
+  return !already;
+}
+
+/* ══════════════════════════════════════════
+   TABS
+══════════════════════════════════════════ */
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) => {
+    const tabs = ['quest','analytics','leaderboard'];
+    b.classList.toggle('active', tabs[i] === name);
+  });
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  if (name === 'analytics') renderAnalytics();
+  if (name === 'leaderboard') renderLeaderboard();
+}
+
+/* ══════════════════════════════════════════
+   RENDER STATS
+══════════════════════════════════════════ */
+function renderStats() {
+  document.getElementById('totalXP').textContent = state.xp.total;
+  document.getElementById('deenXP').textContent = state.xp.deen;
+  document.getElementById('duniyaXP').textContent = state.xp.duniya;
+  document.getElementById('ShreerXP').textContent = state.xp.Shreer;
+  document.getElementById('streakVal').textContent = state.streak;
+  const lv = getLevel();
+  const nextLv = LEVELS[Math.min(lv.idx+1, LEVELS.length-1)];
+  const pct = Math.min(100, Math.round((state.xp.total - lv.min) / Math.max(1, nextLv.max - lv.min) * 100));
+  document.getElementById('xpBar').style.width = pct + '%';
+  document.getElementById('xpToNext').textContent = `${state.xp.total - lv.min} / ${nextLv.max - lv.min} to next level`;
+  document.getElementById('levelBadge').textContent = `${LEVEL_ICONS[lv.idx]} LEVEL ${lv.idx+1} — ${lv.name}`;
+  const sc = getDayScore(state.viewDay);
+  const scoreEl = document.getElementById('dayScore');
+  scoreEl.textContent = sc.done + '/' + sc.total;
+  scoreEl.style.color = sc.pct >= 100 ? 'var(--deen-glow)' : sc.pct >= 80 ? 'var(--gold)' : sc.pct < 30 ? 'var(--muted)' : 'var(--Shreer-glow)';
+}
+
+/* ══════════════════════════════════════════
+   RENDER CALENDAR
+══════════════════════════════════════════ */
+function renderCalendar() {
+  const grid = document.getElementById('calGrid');
+  ['SUN','MON','TUE','WED','THU','FRI','SAT'].forEach(d => {
+    const h = document.createElement('div');
+    h.className = 'cal-day-header';
+    h.textContent = d;
+    grid.appendChild(h);
+  });
+  for (let day = 1; day <= 30; day++) {
+    const sc = getDayScore(day);
+    const el = document.createElement('div');
+    el.className = 'cal-day';
+    if (day === state.viewDay) el.classList.add('active');
+    else if (sc.done === 0) el.classList.add('future');
+    else if (sc.pct >= 90) el.classList.add('past-perfect');
+    else if (sc.pct >= 60) el.classList.add('past-good');
+    else el.classList.add('past-poor');
+    el.innerHTML = `<span>${day}</span>`;
+    if (sc.done > 0) {
+      const dots = document.createElement('div');
+      dots.className = 'cal-dots';
+      const pillars = getWeekTasks(day);
+      const dt = getDayTasks(day);
+      if (pillars.deen.some(t=>dt[t.id])) { const d=document.createElement('div');d.className='cal-dot';d.style.background='var(--deen-glow)';dots.appendChild(d); }
+      if (pillars.duniya.some(t=>dt[t.id])) { const d=document.createElement('div');d.className='cal-dot';d.style.background='var(--duniya-glow)';dots.appendChild(d); }
+      if (pillars.Shreer.some(t=>dt[t.id])) { const d=document.createElement('div');d.className='cal-dot';d.style.background='var(--Shreer-glow)';dots.appendChild(d); }
+      el.appendChild(dots);
+    }
+    el.addEventListener('click', () => { state.viewDay = day; renderAll(); });
+    grid.appendChild(el);
+  }
+}
+
+function refreshCalendar() {
+  const grid = document.getElementById('calGrid');
+  grid.innerHTML = '';
+  renderCalendar();
+}
+
+/* ══════════════════════════════════════════
+   RENDER DAY NAV
+══════════════════════════════════════════ */
+function renderDayNav() {
+  document.getElementById('currentDayNum').textContent = state.viewDay;
+  document.getElementById('currentDayDate').textContent = getDayDate(state.viewDay);
+  document.getElementById('prevBtn').disabled = state.viewDay <= 1;
+  document.getElementById('nextBtn').disabled = state.viewDay >= 30;
+  const allTasks = getWeekTasks(state.viewDay);
+  const all = [...allTasks.deen, ...allTasks.duniya, ...allTasks.Shreer];
+  const done = getDayTasks(state.viewDay);
+  const dots = document.getElementById('dayProgressDots');
+  dots.innerHTML = '';
+  all.forEach(t => {
+    const d = document.createElement('div');
+    d.className = 'dp-dot' + (done[t.id] ? ' done' : '');
+    if (done[t.id]) {
+      const pillar = allTasks.deen.find(x=>x.id===t.id) ? 'deen' : allTasks.duniya.find(x=>x.id===t.id) ? 'duniya' : 'Shreer';
+      d.style.background = pillar==='deen' ? 'var(--deen-glow)' : pillar==='duniya' ? 'var(--duniya-glow)' : 'var(--Shreer-glow)';
+    }
+    dots.appendChild(d);
+  });
+}
+
+/* ══════════════════════════════════════════
+   RENDER PILLARS
+══════════════════════════════════════════ */
+function renderPillars() {
+  const wrap = document.getElementById('pillarsWrap');
+  const allTasks = getWeekTasks(state.viewDay);
+  const doneTasks = getDayTasks(state.viewDay);
+  wrap.innerHTML = '';
+  const pillars = [
+    { key:'deen', label:'DEEN — FAITH & ISLAM', icon:'☪', sub:'Salah · Quran · Ilmu · Adhkar', cls:'deen-block', tasks: allTasks.deen },
+    { key:'duniya', label:'DUNIYA — PROFESSIONAL', icon:'📚', sub:'Your custom study & work tasks', cls:'duniya-block', tasks: allTasks.duniya },
+    { key:'Shreer', label:'Shreer — HEALTH & BODY', icon:'💪', sub:'Exercise · Diet · Sleep · Mind', cls:'Shreer-block', tasks: allTasks.Shreer },
+  ];
+  pillars.forEach(p => {
+    const done = p.tasks.filter(t => doneTasks[t.id]).length;
+    const pct = p.tasks.length > 0 ? Math.round(done/p.tasks.length*100) : 0;
+    const xpEarned = p.tasks.filter(t=>doneTasks[t.id]).reduce((a,t)=>a+t.xp,0);
+    const block = document.createElement('div');
+    block.className = `pillar-block ${p.cls}`;
+    block.innerHTML = `
+      <div class="pillar-header" onclick="this.parentElement.classList.toggle('collapsed')">
+        <div class="pillar-icon">${p.icon}</div>
+        <div class="pillar-title-wrap">
+          <div class="pillar-name">${p.label}</div>
+          <div class="pillar-sub">${p.sub}</div>
+          <div class="pillar-progress-wrap">
+            <div class="pillar-prog-bar"><div class="pillar-prog-fill" style="width:${pct}%"></div></div>
+            <div class="pillar-prog-text">${done}/${p.tasks.length} · ${pct}%</div>
+          </div>
+        </div>
+        <div class="pillar-xp-badge">+${xpEarned} XP</div>
+        <div class="collapse-arrow">▼</div>
+      </div>
+      <div class="pillar-tasks" id="tasks-${p.key}"></div>
+    `;
+    const taskWrap = block.querySelector(`#tasks-${p.key}`);
+
+    // ── DUNIYA: empty state + add-task form ──
+    if (p.key === 'duniya') {
+      if (p.tasks.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'duniya-empty';
+        empty.innerHTML = `<div>📋</div>No tasks yet — add your first Duniya task below!`;
+        taskWrap.appendChild(empty);
+      }
+    }
+
+    p.tasks.forEach(t => {
+      const isDone = !!doneTasks[t.id];
+      const item = document.createElement('div');
+      item.className = `task-item ${isDone ? 'completed' : ''}`;
+      item.innerHTML = `
+        <div class="task-checkbox">${isDone ? '✓' : ''}</div>
+        <div class="task-content">
+          <div class="task-title">${t.title}</div>
+          <div class="task-meta">
+            <span class="tag tag-time">⏰ ${t.time || '—'}</span>
+            <span class="tag tag-xp">+${t.xp} XP</span>
+            <span class="tag tag-type">${t.tag || 'TASK'}</span>
+          </div>
+        </div>
+        ${p.key === 'duniya' ? `<button class="task-delete-btn" title="Remove task" onclick="removeDuniyaTask('${t.id}',event)">✕</button>` : ''}
+        <div class="task-xp-pop">${isDone ? '+'+t.xp : ''}</div>
+      `;
+      item.addEventListener('click', (e) => {
+        if (e.target.classList.contains('task-delete-btn')) return;
+        const added = setTaskComplete(state.viewDay, t.id, p.key, t.xp);
+        item.classList.toggle('completed', added);
+        item.querySelector('.task-checkbox').textContent = added ? '✓' : '';
+        item.querySelector('.task-xp-pop').textContent = added ? '+'+t.xp : '';
+        if (added) showNotif(getCompletionMsg(t.tag), '✅');
+        renderStats();
+        refreshCalendar();
+        renderDayNav();
+        const dT = getDayTasks(state.viewDay);
+        const dn = p.tasks.filter(x => dT[x.id]).length;
+        const pp = p.tasks.length > 0 ? Math.round(dn/p.tasks.length*100) : 0;
+        const xpE = p.tasks.filter(x=>dT[x.id]).reduce((a,x)=>a+x.xp,0);
+        block.querySelector('.pillar-prog-fill').style.width = pp+'%';
+        block.querySelector('.pillar-prog-text').textContent = `${dn}/${p.tasks.length} · ${pp}%`;
+        block.querySelector('.pillar-xp-badge').textContent = `+${xpE} XP`;
+        checkDayComplete();
+      });
+      taskWrap.appendChild(item);
+    });
+
+    // ── DUNIYA: add task form at bottom ──
+    if (p.key === 'duniya') {
+      const xpPerTask = p.tasks.length > 0 ? Math.round(100 / (p.tasks.length + 1)) : 100;
+      const formWrap = document.createElement('div');
+      formWrap.className = 'duniya-add-wrap';
+      formWrap.innerHTML = `
+        <div class="duniya-add-title">＋ ADD NEW DUNIYA TASK</div>
+        <div class="duniya-add-row">
+          <input class="duniya-input task-name" id="duniyaTaskName" type="text" placeholder="Task name (e.g. Learn React Hooks)" maxlength="60">
+          <input class="duniya-input task-time" id="duniyaTaskTime" type="text" placeholder="Time (e.g. 1h 30m)" maxlength="20">
+          <button class="duniya-add-btn" onclick="addDuniyaTask()">＋ ADD</button>
+        </div>
+        <div class="duniya-xp-hint" id="duniyaXpHint">
+          100 XP will be split equally — each task gets <span>${p.tasks.length > 0 ? Math.round(100/p.tasks.length) : 100} XP</span>
+          ${p.tasks.length > 0 ? `→ adding one more gives each task <span>${xpPerTask} XP</span>` : ''}
+        </div>
+      `;
+      taskWrap.appendChild(formWrap);
+    }
+
+    wrap.appendChild(block);
+  });
+}
+
+function checkDayComplete() {
+  const sc = getDayScore(state.viewDay);
+  const badge = document.getElementById('completeBadge');
+  if (sc.pct >= 100) {
+    badge.classList.add('show');
+    document.getElementById('completeMsg').textContent = `🌟 ${sc.total}/${sc.total} tasks · MashaAllah!`;
+    updateStreak();
+  } else { badge.classList.remove('show'); }
+}
+
+function updateStreak() {
+  const sc = getDayScore(state.viewDay);
+  if (sc.pct >= 80) {
+    if (state.lastCompleted === state.viewDay - 1) { state.streak++; state.lastCompleted = state.viewDay; }
+    else if (state.lastCompleted !== state.viewDay) { state.streak = 1; state.lastCompleted = state.viewDay; }
+    saveState(); renderStats();
+  }
+}
+
+/* ══════════════════════════════════════════
+   ANALYTICS
+══════════════════════════════════════════ */
+let completionChartInst = null;
+let pillarChartInst = null;
+
+function renderAnalytics() {
+  renderSummaryStats();
+  renderCompletionChart();
+  renderPillarChart();
+  renderWeakSpots();
+  renderHeatmap();
+}
+
+function renderSummaryStats() {
+  const grid = document.getElementById('summaryGrid');
+  // Total days attempted
+  let daysAttempted = 0, daysPerfect = 0, totalPossibleXP = 0, totalDone = 0, totalTasks = 0;
+  for (let d = 1; d <= 30; d++) {
+    const sc = getDayScore(d);
+    if (sc.done > 0) daysAttempted++;
+    if (sc.pct >= 90) daysPerfect++;
+    const wt = getWeekTasks(d);
+    const allT = [...wt.deen, ...wt.duniya, ...wt.Shreer];
+    totalTasks += allT.length;
+    totalDone += sc.done;
+    totalPossibleXP += allT.reduce((a,t)=>a+t.xp,0);
+  }
+  const overallPct = totalTasks > 0 ? Math.round(totalDone/totalTasks*100) : 0;
+  const maxPossible = Math.round(totalPossibleXP / 30 * daysAttempted);
+
+  grid.innerHTML = `
+    <div class="sum-card"><div class="sum-val" style="color:var(--duniya-glow)">${daysAttempted}</div><div class="sum-lbl">DAYS STARTED</div></div>
+    <div class="sum-card"><div class="sum-val" style="color:var(--deen-glow)">${daysPerfect}</div><div class="sum-lbl">PERFECT DAYS</div></div>
+    <div class="sum-card"><div class="sum-val" style="color:var(--gold)">${overallPct}%</div><div class="sum-lbl">OVERALL RATE</div></div>
+    <div class="sum-card"><div class="sum-val" style="color:var(--Shreer-glow)">${state.streak}</div><div class="sum-lbl">BEST STREAK</div></div>
+  `;
+}
+
+function renderCompletionChart() {
+  const labels = [], data = [];
+  for (let d = 1; d <= 30; d++) {
+    labels.push('D'+d);
+    data.push(getDayScore(d).pct);
+  }
+  if (completionChartInst) completionChartInst.destroy();
+  const ctx = document.getElementById('completionChart').getContext('2d');
+  completionChartInst = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Completion %',
+        data,
+        borderColor: '#448AFF',
+        backgroundColor: 'rgba(68,138,255,0.08)',
+        pointBackgroundColor: data.map(v => v >= 90 ? '#69f0ae' : v >= 60 ? '#FFD600' : v > 0 ? '#FF9100' : 'rgba(255,255,255,0.2)'),
+        pointRadius: 4,
+        fill: true,
+        tension: 0.35,
+        borderWidth: 2,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { min: 0, max: 100, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#607B9B', font: { size: 11 }, callback: v => v+'%', stepSize: 25 }, border: { display: false } },
+        x: { grid: { display: false }, ticks: { color: '#607B9B', font: { size: 10 }, autoSkip: true, maxTicksLimit: 10 }, border: { display: false } }
+      }
+    }
+  });
+}
+
+function renderPillarChart() {
+  if (pillarChartInst) pillarChartInst.destroy();
+  const ctx = document.getElementById('pillarChart').getContext('2d');
+  pillarChartInst = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Deen', 'Duniya', 'Shreer'],
+      datasets: [{
+        data: [state.xp.deen, state.xp.duniya, state.xp.Shreer],
+        backgroundColor: ['rgba(105,240,174,0.8)', 'rgba(68,138,255,0.8)', 'rgba(255,145,0,0.8)'],
+        borderColor: ['#69f0ae', '#448AFF', '#FF9100'],
+        borderWidth: 1,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed} XP` } }
+      },
+      cutout: '65%'
+    }
+  });
+}
+
+function renderWeakSpots() {
+  // Per-tag completion rates
+  const tagStats = {};
+  for (let d = 1; d <= 30; d++) {
+    const wt = getWeekTasks(d);
+    const done = getDayTasks(d);
+    [...wt.deen, ...wt.duniya, ...wt.Shreer].forEach(t => {
+      if (!tagStats[t.tag]) tagStats[t.tag] = { done: 0, total: 0 };
+      tagStats[t.tag].total++;
+      if (done[t.id]) tagStats[t.tag].done++;
+    });
+  }
+  const sorted = Object.entries(tagStats)
+    .map(([tag, s]) => ({ tag, pct: Math.round(s.done/s.total*100) }))
+    .sort((a,b) => a.pct - b.pct)
+    .slice(0, 8);
+
+  const list = document.getElementById('weakList');
+  list.innerHTML = '';
+  sorted.forEach(({ tag, pct }) => {
+    const color = pct >= 80 ? 'var(--deen-glow)' : pct >= 50 ? 'var(--gold)' : 'var(--Shreer-glow)';
+    list.innerHTML += `
+      <div class="weak-item">
+        <div class="weak-label">${tag}</div>
+        <div class="weak-bar-bg"><div class="weak-bar-fill" style="width:${pct}%;background:${color}"></div></div>
+        <div class="weak-pct" style="color:${color}">${pct}%</div>
+      </div>
+    `;
+  });
+}
+
+function renderHeatmap() {
+  const grid = document.getElementById('heatmapGrid');
+  grid.innerHTML = '';
+  for (let d = 1; d <= 30; d++) {
+    const sc = getDayScore(d);
+    const lvl = sc.pct === 0 ? 0 : sc.pct < 50 ? 1 : sc.pct < 80 ? 2 : 3;
+    const cell = document.createElement('div');
+    cell.className = `hm-cell hm-${lvl}`;
+    cell.textContent = d;
+    cell.innerHTML = `${d}<span class="hm-tip">Day ${d}: ${sc.done}/${sc.total} tasks (${sc.pct}%)</span>`;
+    cell.addEventListener('click', () => { state.viewDay = d; switchTab('quest'); renderAll(); });
+    grid.appendChild(cell);
+  }
+}
+
+/* ══════════════════════════════════════════
+   LEADERBOARD
+══════════════════════════════════════════ */
+const RIVAL_NAMES = ["AhmedX", "FarisCode", "ZaraStudies", "IbrahimFit", "NoorQuest", "OmarBuilder", "AishaRises", "YusufGrind"];
+const RIVAL_STYLES = [
+  {xpMult:0.7, streakBase:4},
+  {xpMult:1.3, streakBase:12},
+  {xpMult:0.5, streakBase:2},
+  {xpMult:1.1, streakBase:8},
+  {xpMult:0.9, streakBase:6},
+  {xpMult:1.5, streakBase:15},
+  {xpMult:0.6, streakBase:3},
+  {xpMult:1.2, streakBase:10},
+];
+
+function addFakeOpponent() {
+  const used = state.rivals.map(r => r.name);
+  const available = RIVAL_NAMES.filter(n => !used.includes(n));
+  if (available.length === 0) { showNotif('All rivals added!', '⚔️'); return; }
+  const idx = RIVAL_NAMES.indexOf(available[0]);
+  const style = RIVAL_STYLES[idx % RIVAL_STYLES.length];
+  const rivalXP = Math.floor(state.xp.total * style.xpMult + Math.random() * 200);
+  const lv = getLevel(rivalXP);
+  state.rivals.push({
+    name: available[0],
+    xp: rivalXP,
+    streak: style.streakBase + Math.floor(Math.random() * 5),
+    pct: Math.floor(40 + Math.random() * 55),
+    level: `LV${lv.idx+1} ${lv.name}`,
+    isRival: true,
+  });
+  saveState();
+  renderLeaderboard();
+  showNotif(`${available[0]} joined the challenge!`, '⚔️');
+}
+
+function clearRivals() {
+  if (!confirm('Remove all rivals?')) return;
+  state.rivals = state.rivals.filter(r => !r.isRival);
+  saveState();
+  renderLeaderboard();
+}
+
+function savePlayerName() {
+  const val = document.getElementById('playerNameInput').value.trim();
+  if (!val) { showNotif('Enter a player name first!', '⚠️'); return; }
+  state.playerName = val;
+  saveState();
+  renderLeaderboard();
+  showNotif(`Player name set: ${val}`, '✅');
+}
+
+function renderLeaderboard() {
+  const nameInput = document.getElementById('playerNameInput');
+  nameInput.value = state.playerName;
+  const disp = document.getElementById('currentNameDisplay');
+  disp.textContent = state.playerName ? `Current: "${state.playerName}"` : 'No name set yet.';
+
+  // Build entries
+  const lv = getLevel();
+  const sc30 = Array.from({length:30}, (_,i)=>getDayScore(i+1));
+  const myPct = sc30.filter(s=>s.done>0).length > 0 ?
+    Math.round(sc30.reduce((a,s)=>a+s.pct,0) / 30) : 0;
+
+  const myEntry = {
+    name: state.playerName || 'YOU',
+    xp: state.xp.total,
+    streak: state.streak,
+    pct: myPct,
+    level: `LV${lv.idx+1} ${lv.name}`,
+    isYou: true,
+  };
+
+  const all = [myEntry, ...state.rivals].sort((a,b) => b.xp - a.xp);
+
+  // Challenge box
+  const challenger = state.rivals.find(r => r.isRival);
+  const cBox = document.getElementById('challengeBox');
+  if (challenger) {
+    const diff = state.xp.total - challenger.xp;
+    const myW = Math.min(100, Math.round(state.xp.total / Math.max(1, state.xp.total + challenger.xp) * 100));
+    cBox.innerHTML = `
+      <h3>⚔️ YOUR ACTIVE CHALLENGE vs ${challenger.name}</h3>
+      <p style="font-size:13px;color:var(--muted);">${diff >= 0 ? '🟢 You lead by' : '🔴 Behind by'} ${Math.abs(diff)} XP</p>
+      <div class="challenge-progress">
+        <div class="cp-item">
+          <div class="cp-name">${state.playerName || 'YOU'}</div>
+          <div class="cp-bar-bg"><div class="cp-bar-fill" style="width:${myW}%;background:var(--duniya-glow)"></div></div>
+          <div class="cp-score" style="color:var(--duniya-glow)">${state.xp.total} XP</div>
+        </div>
+        <div style="font-family:'Orbitron',monospace;font-size:18px;font-weight:900;color:var(--muted);align-self:center;">VS</div>
+        <div class="cp-item">
+          <div class="cp-name">${challenger.name}</div>
+          <div class="cp-bar-bg"><div class="cp-bar-fill" style="width:${100-myW}%;background:var(--Shreer-glow)"></div></div>
+          <div class="cp-score" style="color:var(--Shreer-glow)">${challenger.xp} XP</div>
+        </div>
+      </div>
+    `;
+    cBox.style.display = 'block';
+  } else {
+    cBox.innerHTML = `<h3>⚔️ NO ACTIVE CHALLENGE</h3><p style="font-size:13px;color:var(--muted);">Add a rival to start competing! Click "+ ADD RIVAL" above.</p>`;
+    cBox.style.display = 'block';
+  }
+
+  // Table
+  const table = document.getElementById('lbTable');
+  if (all.length === 0) { table.innerHTML = '<div class="lb-empty">No players yet. Set your name above!</div>'; return; }
+
+  table.innerHTML = `
+    <div class="lb-header-row">
+      <div>#</div><div>PLAYER</div><div>XP</div><div>STREAK</div><div>AVG %</div><div>LEVEL</div>
+    </div>
+  `;
+  all.forEach((p, i) => {
+    const rankClass = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-other';
+    const medals = ['🥇','🥈','🥉'];
+    const rankDisplay = i < 3 ? medals[i] : `#${i+1}`;
+    const row = document.createElement('div');
+    row.className = `lb-entry ${p.isYou ? 'you' : ''}`;
+    row.innerHTML = `
+      <div class="lb-rank ${rankClass}">${rankDisplay}</div>
+      <div class="lb-name">${p.name}${p.isYou ? '<span class="you-tag">YOU</span>' : ''}</div>
+      <div class="lb-xp">${p.xp}</div>
+      <div class="lb-streak">🔥${p.streak}</div>
+      <div class="lb-pct" style="color:${p.pct>=80?'var(--deen-glow)':p.pct>=50?'var(--gold)':'var(--Shreer-glow)'}">${p.pct}%</div>
+      <div class="lb-level">${p.level}</div>
+    `;
+    table.appendChild(row);
+  });
+
+  // Share code
+  const shareData = {
+    name: state.playerName || 'Anonymous',
+    xp: state.xp.total,
+    streak: state.streak,
+    pct: myPct,
+    level: `LV${lv.idx+1} ${lv.name}`,
+  };
+  document.getElementById('shareCode').textContent = btoa(JSON.stringify(shareData));
+}
+
+function copyShareCode() {
+  const code = document.getElementById('shareCode').textContent;
+  navigator.clipboard.writeText(code).then(() => showNotif('Code copied! Share with your friend 📤', '📋'));
+}
+
+function pasteRivalCode() {
+  const input = prompt('Paste your friend\'s share code here:');
+  if (!input) return;
+  try {
+    const data = JSON.parse(atob(input.trim()));
+    if (!data.name || data.xp === undefined) throw new Error('Invalid');
+    if (state.rivals.find(r => r.name === data.name)) { showNotif('Rival already added!', '⚠️'); return; }
+    state.rivals.push({ ...data, isRival: true });
+    saveState();
+    renderLeaderboard();
+    showNotif(`${data.name} added as rival! ⚔️`, '🏆');
+  } catch(e) { showNotif('Invalid code. Ask your friend to copy it again.', '❌'); }
+}
+
+/* ══════════════════════════════════════════
+   CUSTOM DUNIYA TASK MANAGEMENT
+══════════════════════════════════════════ */
+function redistributeDuniyaXP() {
+  const tasks = state.customDuniyaTasks;
+  if (tasks.length === 0) return;
+  const base = Math.floor(100 / tasks.length);
+  const remainder = 100 - base * tasks.length;
+  tasks.forEach((t, i) => { t.xp = base + (i < remainder ? 1 : 0); });
+}
+
+function addDuniyaTask() {
+  const nameEl = document.getElementById('duniyaTaskName');
+  const timeEl = document.getElementById('duniyaTaskTime');
+  const name = nameEl.value.trim();
+  const time = timeEl.value.trim() || '—';
+  if (!name) { showNotif('Please enter a task name!', '⚠️'); nameEl.focus(); return; }
+  const id = 'du_' + Date.now();
+  state.customDuniyaTasks.push({ id, title: name, time, xp: 0, tag: 'TASK' });
+  redistributeDuniyaXP();
+  saveState();
+  nameEl.value = '';
+  timeEl.value = '';
+  renderAll();
+  showNotif(`Task "${name}" added! XP redistributed 💡`, '📚');
+}
+
+function removeDuniyaTask(id, e) {
+  e.stopPropagation();
+  const task = state.customDuniyaTasks.find(t => t.id === id);
+  if (!confirm(`Remove "${task ? task.title : 'this task'}"?`)) return;
+  // Deduct XP from all days where this task was completed
+  for (const dayKey in state.completedTasks) {
+    if (state.completedTasks[dayKey][id]) {
+      const xp = task ? task.xp : 0;
+      state.xp.duniya = Math.max(0, state.xp.duniya - xp);
+      state.xp.total = Math.max(0, state.xp.total - xp);
+      delete state.completedTasks[dayKey][id];
+    }
+  }
+  state.customDuniyaTasks = state.customDuniyaTasks.filter(t => t.id !== id);
+  redistributeDuniyaXP();
+  saveState();
+  renderAll();
+  showNotif('Task removed. XP redistributed.', '🗑️');
+}
+
+
+function showXPFloat(xp) {
+  const el = document.createElement('div');
+  el.className = 'xp-float';
+  el.textContent = `+${xp} XP`;
+  el.style.left = (Math.random() * 60 + 20) + '%';
+  el.style.top = (Math.random() * 30 + 30) + '%';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1300);
+}
+
+function showNotif(msg, icon='✅') {
+  const n = document.getElementById('notif');
+  n.innerHTML = `<span style="font-size:18px">${icon}</span> ${msg}`;
+  n.classList.add('show');
+  clearTimeout(n._t);
+  n._t = setTimeout(() => n.classList.remove('show'), 3000);
+}
+
+function getCompletionMsg(tag) {
+  const msgs = {
+    SALAH:["Allah is watching. BarakAllahu Feek 🌿","Salah complete ☪"],
+    QURAN:["Words of Allah recited ✨","MashaAllah! Quran done 📖"],
+    ADHKAR:["Heart remembers Allah 💚","Dhikr accepted insha'Allah 🤲"],
+    DSA:["Algorithm mastered 🧠","DSA warrior mode: ON 💻"],
+    LEETCODE:["Grind don't stop 🔥","LeetCode beast! 💪"],
+    SQL:["Data mastered 📊","SQL skills +1 🗄️"],
+    NETWORK:["Network ninja 🌐","Protocol unlocked 🔓"],
+    CYBER:["Security mindset activated 🛡️","Ethical hacker in training 🎯"],
+    EXERCISE:["Body levelled up! 🏃","Gains loading... 💪🔥"],
+    SLEEP:["Rest is part of the grind 😴","Recovery mode: activated 🌙"],
+    DIET:["Clean eating = clean thinking 🥗","Fuel loaded 💯"],
+    MINDSET:["Mind over phone. You won 📵","Screen discipline = life discipline 💯"],
+  };
+  const arr = msgs[tag] || ["Task complete! +XP earned 🎯","One step closer! 🚀"];
+  return arr[Math.floor(Math.random()*arr.length)];
+}
+
+function renderQuote() {
+  const q = QUOTES[Math.floor(Math.random() * QUOTES.length)];
+  document.getElementById('quoteBar').innerHTML = `<strong>${q.q}</strong><br><span style="font-size:12px;color:var(--duniya-glow);">— ${q.src}</span>`;
+}
+
+function changeDay(dir) {
+  state.viewDay = Math.max(1, Math.min(30, state.viewDay + dir));
+  renderAll();
+  renderQuote();
+}
+
+function resetDay() {
+  if (!confirm(`Reset all tasks for Day ${state.viewDay}? XP will be recalculated.`)) return;
+  const tasks = getDayTasks(state.viewDay);
+  const allTasks = getWeekTasks(state.viewDay);
+  [...allTasks.deen, ...allTasks.duniya, ...allTasks.Shreer].forEach(t => {
+    if (tasks[t.id]) {
+      const pillar = allTasks.deen.find(x=>x.id===t.id) ? 'deen' : allTasks.duniya.find(x=>x.id===t.id) ? 'duniya' : 'Shreer';
+      state.xp[pillar] = Math.max(0, state.xp[pillar] - t.xp);
+      state.xp.total = Math.max(0, state.xp.total - t.xp);
+    }
+  });
+  state.completedTasks[`day-${state.viewDay}`] = {};
+  saveState();
+  renderAll();
+  showNotif('Day reset. Start fresh! 💪', '🔄');
+}
+
+function renderAll() {
+  renderStats();
+  refreshCalendar();
+  renderDayNav();
+  renderPillars();
+  checkDayComplete();
+}
+
+/* ══════════════════════════════════════════
+   INIT
+══════════════════════════════════════════ */
+loadState();
+renderQuote();
+renderAll();
+setInterval(renderQuote, 300000);
+
+// Allow pressing Enter in duniya task inputs
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && (document.activeElement.id === 'duniyaTaskName' || document.activeElement.id === 'duniyaTaskTime')) {
+    addDuniyaTask();
+  }
+});
+</script>
+</body>
+</html>
