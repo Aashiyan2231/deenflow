@@ -1,280 +1,117 @@
-import { signInWithRedirect } from "firebase/auth";
-import { auth, provider } from "../firebase";
+import { useState } from "react";
+import { useAuth } from "../context/AuthContext";
 
 function Login() {
-  const handleGoogleLogin = async () => {
-    try {
-      await signInWithRedirect(auth, provider);
-    } catch (error) {
-      console.error("Login failed:", error.message);
+  const { setUserName } = useAuth();
+  const [name, setName] = useState("");
+  const [error, setError] = useState("");
+
+  const handleStart = () => {
+    if (!name.trim()) {
+      setError("Please enter your name!");
+      return;
     }
+    if (name.trim().length < 2) {
+      setError("Name must be at least 2 characters!");
+      return;
+    }
+    setUserName(name.trim());
   };
 
   return (
     <div style={{
       minHeight: "100vh",
-      background: "#080B14",
-      color: "white",
-      fontFamily: "'Space Grotesk', sans-serif",
-      overflow: "hidden",
-      position: "relative",
+      background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "20px",
+      fontFamily: "'Plus Jakarta Sans', sans-serif",
     }}>
-
-      {/* Background Effects */}
       <div style={{
-        position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none",
-        background: `
-          radial-gradient(ellipse 80% 50% at 20% 20%, rgba(108,99,255,0.12) 0%, transparent 60%),
-          radial-gradient(ellipse 60% 40% at 80% 80%, rgba(56,189,248,0.08) 0%, transparent 60%),
-          radial-gradient(ellipse 50% 60% at 50% 10%, rgba(0,229,160,0.05) 0%, transparent 70%)
-        `,
-      }} />
-      <div style={{
-        position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none",
-        backgroundImage: `
-          linear-gradient(rgba(108,99,255,0.03) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(108,99,255,0.03) 1px, transparent 1px)
-        `,
-        backgroundSize: "60px 60px",
-      }} />
-
-      {/* Navbar */}
-      <nav style={{
-        position: "relative", zIndex: 1,
-        display: "flex", justifyContent: "space-between", alignItems: "center",
-        padding: "20px 40px",
-        borderBottom: "1px solid rgba(255,255,255,0.05)",
-        backdropFilter: "blur(10px)",
-      }}>
-        <div style={{
-          fontFamily: "'Orbitron', monospace",
-          fontSize: "20px", fontWeight: "900",
-          background: "linear-gradient(135deg, #38bdf8, #7c3aed)",
-          WebkitBackgroundClip: "text",
-          WebkitTextFillColor: "transparent",
-          backgroundClip: "text",
-          letterSpacing: "2px",
-        }}>
-          ⚔️ DEENFLOW
-        </div>
-        <button
-          onClick={handleGoogleLogin}
-          style={{
-            padding: "10px 24px",
-            background: "rgba(56,189,248,0.1)",
-            border: "1px solid rgba(56,189,248,0.3)",
-            borderRadius: "10px", color: "#38bdf8",
-            fontFamily: "'Orbitron',monospace", fontSize: "11px",
-            fontWeight: "700", cursor: "pointer", letterSpacing: "1px",
-            transition: "all 0.2s",
-          }}
-        >
-          SIGN IN
-        </button>
-      </nav>
-
-      {/* Hero Section */}
-      <div style={{
-        position: "relative", zIndex: 1,
+        background: "white",
+        borderRadius: "32px",
+        padding: "40px 32px",
+        width: "100%",
+        maxWidth: "400px",
+        boxShadow: "0 24px 64px rgba(0,0,0,0.2)",
         textAlign: "center",
-        padding: "80px 20px 60px",
       }}>
-        {/* Badge */}
-        <div style={{
-          display: "inline-flex", alignItems: "center", gap: "8px",
-          background: "rgba(108,99,255,0.1)", border: "1px solid rgba(108,99,255,0.3)",
-          borderRadius: "100px", padding: "6px 20px",
-          fontFamily: "'Orbitron',monospace", fontSize: "10px",
-          color: "#818cf8", letterSpacing: "3px", marginBottom: "24px",
-        }}>
-          ◆ BUILD DISCIPLINE LIKE A GAME
-        </div>
-
-        {/* Main Title */}
+        {/* Logo */}
+        <div style={{ fontSize: "48px", marginBottom: "8px" }}>⚔️</div>
         <h1 style={{
-          fontFamily: "'Orbitron', monospace",
-          fontSize: "clamp(36px, 8vw, 80px)",
-          fontWeight: "900",
-          background: "linear-gradient(135deg, #fff 0%, #38bdf8 40%, #7c3aed 70%, #00e5a0 100%)",
-          WebkitBackgroundClip: "text",
-          WebkitTextFillColor: "transparent",
-          backgroundClip: "text",
-          lineHeight: "1.05",
-          letterSpacing: "3px",
-          marginBottom: "24px",
+          fontSize: "28px", fontWeight: "800",
+          background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
+          WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+          backgroundClip: "text", marginBottom: "6px",
         }}>
-          WELCOME TO<br />DEENFLOW
+          DeenFlow
         </h1>
-
-        {/* Subtitle */}
-        <p style={{
-          color: "#94a3b8", fontSize: "18px",
-          maxWidth: "600px", margin: "0 auto 16px",
-          lineHeight: "1.6",
-        }}>
-          A gamified self-improvement platform built on
-          <span style={{ color: "#00e5a0" }}> Deen</span>,
-          <span style={{ color: "#818cf8" }}> Duniya</span> &
-          <span style={{ color: "#f87171" }}> Health</span>.
-          Complete daily missions, earn XP, and compete with friends.
+        <p style={{ color: "#94a3b8", fontSize: "14px", marginBottom: "32px" }}>
+          Build discipline like a game 🎮
         </p>
 
-        <p style={{
-          fontFamily: "'Orbitron',monospace",
-          color: "#64748b", fontSize: "12px",
-          letterSpacing: "2px", marginBottom: "40px",
-        }}>
-          DEEN · DUNIYA · HEALTH — YOUR TRANSFORMATION BEGINS
-        </p>
-
-        {/* CTA Button */}
-        <button
-          onClick={handleGoogleLogin}
-          style={{
-            padding: "18px 48px",
-            background: "linear-gradient(135deg, rgba(108,99,255,0.4), rgba(56,189,248,0.3))",
-            border: "1px solid rgba(108,99,255,0.5)",
-            borderRadius: "16px", color: "white",
-            fontFamily: "'Orbitron',monospace", fontSize: "14px",
-            fontWeight: "700", cursor: "pointer", letterSpacing: "2px",
-            transition: "all 0.3s",
-            boxShadow: "0 0 40px rgba(108,99,255,0.2)",
-          }}
-          onMouseOver={e => e.currentTarget.style.boxShadow = "0 0 60px rgba(108,99,255,0.4)"}
-          onMouseOut={e => e.currentTarget.style.boxShadow = "0 0 40px rgba(108,99,255,0.2)"}
-        >
-          🚀 GET STARTED — SIGN IN WITH GOOGLE
-        </button>
-
-        <p style={{ color: "#64748b", fontSize: "12px", marginTop: "16px" }}>
-          Free forever · No credit card required
-        </p>
-      </div>
-
-      {/* Features Grid */}
-      <div style={{
-        position: "relative", zIndex: 1,
-        maxWidth: "1000px", margin: "0 auto",
-        padding: "0 20px 40px",
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-        gap: "16px",
-      }}>
-        {[
-          {
-            icon: "⚔️",
-            title: "DAILY MISSIONS",
-            desc: "Complete Deen, Duniya & Health missions every day. Earn XP and level up.",
-            color: "#00e5a0",
-            glow: "rgba(0,229,160,0.1)",
-            border: "rgba(0,229,160,0.2)",
-          },
-          {
-            icon: "👥",
-            title: "GROUP CHALLENGES",
-            desc: "Create or join groups. Admin sets missions. Compete with your circle for 30 days.",
-            color: "#818cf8",
-            glow: "rgba(129,140,248,0.1)",
-            border: "rgba(129,140,248,0.2)",
-          },
-          {
-            icon: "🏆",
-            title: "LEADERBOARD",
-            desc: "See how you rank against friends and group members. Stay motivated.",
-            color: "#fbbf24",
-            glow: "rgba(251,191,36,0.1)",
-            border: "rgba(251,191,36,0.2)",
-          },
-          {
-            icon: "📈",
-            title: "LEVEL SYSTEM",
-            desc: "Earn XP, level up from Initiate to Legend. Track your growth over time.",
-            color: "#38bdf8",
-            glow: "rgba(56,189,248,0.1)",
-            border: "rgba(56,189,248,0.2)",
-          },
-          {
-            icon: "🔥",
-            title: "STREAK TRACKING",
-            desc: "Keep your daily streak alive. Consistency is the key to transformation.",
-            color: "#f87171",
-            glow: "rgba(248,113,113,0.1)",
-            border: "rgba(248,113,113,0.2)",
-          },
-          {
-            icon: "🤝",
-            title: "FRIEND SYSTEM",
-            desc: "Add friends with unique codes. Challenge them and grow together.",
-            color: "#7c3aed",
-            glow: "rgba(124,58,237,0.1)",
-            border: "rgba(124,58,237,0.2)",
-          },
-        ].map((f, i) => (
-          <div key={i} style={{
-            background: f.glow,
-            border: `1px solid ${f.border}`,
-            borderRadius: "20px", padding: "24px",
-            transition: "transform 0.2s",
-          }}
-            onMouseOver={e => e.currentTarget.style.transform = "translateY(-4px)"}
-            onMouseOut={e => e.currentTarget.style.transform = "translateY(0)"}
-          >
-            <div style={{ fontSize: "32px", marginBottom: "12px" }}>{f.icon}</div>
-            <div style={{
-              fontFamily: "'Orbitron',monospace", fontSize: "12px",
-              color: f.color, fontWeight: "700", letterSpacing: "1px",
-              marginBottom: "8px",
+        {/* Features */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "32px" }}>
+          {[
+            { icon: "⚔️", text: "Complete daily missions" },
+            { icon: "⭐", text: "Earn XP & level up" },
+            { icon: "🏆", text: "Compete on leaderboard" },
+            { icon: "👥", text: "Join group challenges" },
+          ].map((f, i) => (
+            <div key={i} style={{
+              display: "flex", alignItems: "center", gap: "12px",
+              background: "#f8fafc", borderRadius: "12px", padding: "12px 16px",
+              textAlign: "left",
             }}>
-              {f.title}
+              <span style={{ fontSize: "20px" }}>{f.icon}</span>
+              <span style={{ fontSize: "13px", fontWeight: "600", color: "#1e1b4b" }}>{f.text}</span>
             </div>
-            <p style={{ color: "#94a3b8", fontSize: "14px", lineHeight: "1.6" }}>
-              {f.desc}
-            </p>
-          </div>
-        ))}
-      </div>
-
-      {/* Bottom CTA */}
-      <div style={{
-        position: "relative", zIndex: 1,
-        textAlign: "center", padding: "40px 20px 60px",
-        borderTop: "1px solid rgba(255,255,255,0.05)",
-      }}>
-        <div style={{
-          fontFamily: "'Orbitron',monospace",
-          fontSize: "clamp(20px, 4vw, 36px)",
-          fontWeight: "900", color: "white",
-          marginBottom: "16px",
-        }}>
-          READY TO LEVEL UP?
+          ))}
         </div>
-        <p style={{ color: "#64748b", marginBottom: "28px", fontSize: "15px" }}>
-          Join hundreds of people building better habits every day.
+
+        {/* Name Input */}
+        <p style={{ fontSize: "14px", fontWeight: "700", color: "#1e1b4b", marginBottom: "10px" }}>
+          Enter your name to get started
         </p>
-        <button
-          onClick={handleGoogleLogin}
+        <input
+          value={name}
+          onChange={e => { setName(e.target.value); setError(""); }}
+          onKeyDown={e => e.key === "Enter" && handleStart()}
+          placeholder="Your name..."
           style={{
-            padding: "16px 40px",
-            background: "linear-gradient(135deg, rgba(0,229,160,0.2), rgba(56,189,248,0.15))",
-            border: "1px solid rgba(0,229,160,0.4)",
-            borderRadius: "14px", color: "#00e5a0",
-            fontFamily: "'Orbitron',monospace", fontSize: "13px",
-            fontWeight: "700", cursor: "pointer", letterSpacing: "2px",
+            width: "100%", padding: "14px 16px",
+            background: "#f8fafc", border: error ? "2px solid #ef4444" : "2px solid #e2e8f0",
+            borderRadius: "14px", color: "#1e1b4b",
+            fontSize: "15px", fontWeight: "600",
+            outline: "none", boxSizing: "border-box",
+            fontFamily: "'Plus Jakarta Sans', sans-serif",
+            marginBottom: "8px", textAlign: "center",
+          }}
+        />
+        {error && (
+          <p style={{ color: "#ef4444", fontSize: "12px", marginBottom: "8px" }}>{error}</p>
+        )}
+
+        <button
+          onClick={handleStart}
+          style={{
+            width: "100%", padding: "15px",
+            background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
+            border: "none", borderRadius: "14px", color: "white",
+            fontSize: "15px", fontWeight: "700", cursor: "pointer",
+            fontFamily: "'Plus Jakarta Sans', sans-serif",
+            boxShadow: "0 8px 24px rgba(99,102,241,0.3)",
+            marginBottom: "12px",
           }}
         >
-          START YOUR JOURNEY →
+          🚀 Start My Journey
         </button>
 
-        <div style={{
-          marginTop: "40px",
-          fontFamily: "'Orbitron',monospace",
-          fontSize: "10px", color: "#334155",
-          letterSpacing: "2px",
-        }}>
-          DEENFLOW © 2025 · BUILD WITH PURPOSE
-        </div>
+        <p style={{ color: "#94a3b8", fontSize: "11px" }}>
+          Free forever · No signup required
+        </p>
       </div>
-
     </div>
   );
 }
