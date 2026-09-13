@@ -35,7 +35,7 @@ function Profile() {
 
   const handleSendRequest = async () => {
     if (!friendCode.trim()) return;
-    const result = await sendFriendRequest(user, friendCode.trim());
+    const result = await sendFriendRequest(userData, friendCode.trim());
     setMessage(result.error || result.success);
     setFriendCode("");
     setTimeout(() => setMessage(null), 3000);
@@ -71,18 +71,22 @@ function Profile() {
         <div style={{ position: "absolute", top: "-30px", right: "-30px", width: "120px", height: "120px", background: "rgba(255,255,255,0.08)", borderRadius: "50%" }} />
         <div style={{ position: "absolute", bottom: "-20px", left: "20px", width: "80px", height: "80px", background: "rgba(255,255,255,0.06)", borderRadius: "50%" }} />
 
-        <img src={user.photoURL} alt="avatar" style={{
+        {/* Simple name-based auth has no profile photo — show an initial-letter avatar instead */}
+        <div style={{
           width: "80px", height: "80px", borderRadius: "50%",
           border: "3px solid rgba(255,255,255,0.5)",
           boxShadow: "0 4px 20px rgba(0,0,0,0.2)",
           marginBottom: "12px", position: "relative", zIndex: 1,
-        }} />
+          background: "rgba(255,255,255,0.2)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: "32px", fontWeight: "800", color: "white",
+          margin: "0 auto 12px",
+        }}>
+          {user?.name?.[0]?.toUpperCase() || "?"}
+        </div>
         <h2 style={{ color: "white", fontSize: "22px", fontWeight: "800", marginBottom: "4px", position: "relative", zIndex: 1 }}>
-          {user.displayName}
+          {user?.name}
         </h2>
-        <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "13px", marginBottom: "16px", position: "relative", zIndex: 1 }}>
-          {user.email}
-        </p>
 
         {/* Friend Code */}
         <div style={{
@@ -222,17 +226,13 @@ function Profile() {
               padding: "10px", background: "white",
               borderRadius: "14px", marginBottom: "8px",
             }}>
-              {req.photo ? (
-                <img src={req.photo} alt="" style={{ width: "38px", height: "38px", borderRadius: "50%" }} />
-              ) : (
-                <div style={{
-                  width: "38px", height: "38px", borderRadius: "50%",
-                  background: "#fed7aa", display: "flex", alignItems: "center",
-                  justifyContent: "center", color: "#d97706", fontWeight: "800",
-                }}>
-                  {req.name?.[0]?.toUpperCase()}
-                </div>
-              )}
+              <div style={{
+                width: "38px", height: "38px", borderRadius: "50%",
+                background: "#fed7aa", display: "flex", alignItems: "center",
+                justifyContent: "center", color: "#d97706", fontWeight: "800",
+              }}>
+                {req.name?.[0]?.toUpperCase()}
+              </div>
               <div style={{ flex: 1 }}>
                 <p style={{ fontSize: "14px", fontWeight: "700", color: "#1e1b4b" }}>{req.name}</p>
                 <p style={{ fontSize: "11px", color: "#94a3b8" }}>Level {req.level} · {req.xp} XP</p>
@@ -273,17 +273,13 @@ function Profile() {
               borderRadius: "14px", marginBottom: "8px",
               border: "1px solid #e2e8f0",
             }}>
-              {f.photo ? (
-                <img src={f.photo} alt="" style={{ width: "40px", height: "40px", borderRadius: "50%", border: "2px solid #c7d2fe" }} />
-              ) : (
-                <div style={{
-                  width: "40px", height: "40px", borderRadius: "50%",
-                  background: "#eef2ff", display: "flex", alignItems: "center",
-                  justifyContent: "center", color: "#6366f1", fontWeight: "800",
-                }}>
-                  {f.name?.[0]?.toUpperCase()}
-                </div>
-              )}
+              <div style={{
+                width: "40px", height: "40px", borderRadius: "50%",
+                background: "#eef2ff", display: "flex", alignItems: "center",
+                justifyContent: "center", color: "#6366f1", fontWeight: "800",
+              }}>
+                {f.name?.[0]?.toUpperCase()}
+              </div>
               <div style={{ flex: 1 }}>
                 <p style={{ fontSize: "14px", fontWeight: "700", color: "#1e1b4b" }}>{f.name}</p>
                 <p style={{ fontSize: "11px", color: "#94a3b8" }}>Level {f.level} · {f.xp} XP · 🔥{f.streak}</p>

@@ -21,58 +21,88 @@ function Login() {
   return (
     <div style={{
       minHeight: "100vh",
-      background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+      background: "#0F0A1E",
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
       padding: "20px",
       fontFamily: "'Plus Jakarta Sans', sans-serif",
+      position: "relative",
+      overflow: "hidden",
     }}>
+
+      {/* Background effects */}
       <div style={{
-        background: "white",
+        position: "absolute", inset: 0, pointerEvents: "none",
+        background: `
+          radial-gradient(ellipse 60% 50% at 20% 20%, rgba(139,92,246,0.15) 0%, transparent 60%),
+          radial-gradient(ellipse 50% 40% at 80% 80%, rgba(99,102,241,0.1) 0%, transparent 60%)
+        `,
+      }} />
+
+      <div style={{
+        background: "rgba(255,255,255,0.04)",
+        border: "1px solid rgba(139,92,246,0.3)",
         borderRadius: "32px",
         padding: "40px 32px",
         width: "100%",
         maxWidth: "400px",
-        boxShadow: "0 24px 64px rgba(0,0,0,0.2)",
+        boxShadow: "0 24px 64px rgba(139,92,246,0.2)",
         textAlign: "center",
+        position: "relative",
+        zIndex: 1,
+        backdropFilter: "blur(20px)",
       }}>
+
         {/* Logo */}
-        <div style={{ fontSize: "48px", marginBottom: "8px" }}>⚔️</div>
+        <div style={{ fontSize: "52px", marginBottom: "8px" }}>⚔️</div>
         <h1 style={{
-          fontSize: "28px", fontWeight: "800",
-          background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
+          fontSize: "32px", fontWeight: "800",
+          background: "linear-gradient(135deg, #a78bfa, #818cf8)",
           WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
           backgroundClip: "text", marginBottom: "6px",
+          letterSpacing: "-1px",
         }}>
-          DeenFlow
+          StudyBattle
         </h1>
-        <p style={{ color: "#94a3b8", fontSize: "14px", marginBottom: "32px" }}>
-          Build discipline like a game 🎮
+        <p style={{ color: "#6b7280", fontSize: "14px", marginBottom: "8px" }}>
+          Beat reel addiction. Win at studies. 🎮
         </p>
+        <div style={{
+          display: "inline-block",
+          background: "rgba(139,92,246,0.1)",
+          border: "1px solid rgba(139,92,246,0.3)",
+          borderRadius: "100px", padding: "4px 14px",
+          color: "#a78bfa", fontSize: "11px", fontWeight: "700",
+          marginBottom: "28px", letterSpacing: "1px",
+        }}>
+          🔥 JOIN THE GRIND
+        </div>
 
         {/* Features */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "32px" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "28px" }}>
           {[
-            { icon: "⚔️", text: "Complete daily missions" },
-            { icon: "⭐", text: "Earn XP & level up" },
-            { icon: "🏆", text: "Compete on leaderboard" },
-            { icon: "👥", text: "Join group challenges" },
+            { icon: "🏆", text: "Join study contests & compete" },
+            { icon: "⭐", text: "Earn XP & level up daily" },
+            { icon: "🔥", text: "Build streaks, beat friends" },
+            { icon: "📚", text: "DSA, Maths, Physics & more" },
           ].map((f, i) => (
             <div key={i} style={{
               display: "flex", alignItems: "center", gap: "12px",
-              background: "#f8fafc", borderRadius: "12px", padding: "12px 16px",
+              background: "rgba(255,255,255,0.03)",
+              border: "1px solid rgba(139,92,246,0.15)",
+              borderRadius: "12px", padding: "11px 14px",
               textAlign: "left",
             }}>
-              <span style={{ fontSize: "20px" }}>{f.icon}</span>
-              <span style={{ fontSize: "13px", fontWeight: "600", color: "#1e1b4b" }}>{f.text}</span>
+              <span style={{ fontSize: "18px" }}>{f.icon}</span>
+              <span style={{ fontSize: "13px", fontWeight: "600", color: "#c4b5fd" }}>{f.text}</span>
             </div>
           ))}
         </div>
 
         {/* Name Input */}
-        <p style={{ fontSize: "14px", fontWeight: "700", color: "#1e1b4b", marginBottom: "10px" }}>
-          Enter your name to get started
+        <p style={{ fontSize: "13px", fontWeight: "700", color: "#a78bfa", marginBottom: "10px", letterSpacing: "1px" }}>
+          ENTER YOUR NAME TO BEGIN
         </p>
         <input
           value={name}
@@ -81,8 +111,9 @@ function Login() {
           placeholder="Your name..."
           style={{
             width: "100%", padding: "14px 16px",
-            background: "#f8fafc", border: error ? "2px solid #ef4444" : "2px solid #e2e8f0",
-            borderRadius: "14px", color: "#1e1b4b",
+            background: "rgba(255,255,255,0.05)",
+            border: error ? "2px solid #ef4444" : "2px solid rgba(139,92,246,0.3)",
+            borderRadius: "14px", color: "white",
             fontSize: "15px", fontWeight: "600",
             outline: "none", boxSizing: "border-box",
             fontFamily: "'Plus Jakarta Sans', sans-serif",
@@ -97,18 +128,21 @@ function Login() {
           onClick={handleStart}
           style={{
             width: "100%", padding: "15px",
-            background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
+            background: "linear-gradient(135deg, #8b5cf6, #6366f1)",
             border: "none", borderRadius: "14px", color: "white",
             fontSize: "15px", fontWeight: "700", cursor: "pointer",
             fontFamily: "'Plus Jakarta Sans', sans-serif",
-            boxShadow: "0 8px 24px rgba(99,102,241,0.3)",
+            boxShadow: "0 8px 24px rgba(139,92,246,0.4)",
             marginBottom: "12px",
+            transition: "all 0.2s",
           }}
+          onMouseOver={e => e.currentTarget.style.transform = "translateY(-2px)"}
+          onMouseOut={e => e.currentTarget.style.transform = "translateY(0)"}
         >
-          🚀 Start My Journey
+          ⚔️ Enter the Arena
         </button>
 
-        <p style={{ color: "#94a3b8", fontSize: "11px" }}>
+        <p style={{ color: "#4b5563", fontSize: "11px" }}>
           Free forever · No signup required
         </p>
       </div>

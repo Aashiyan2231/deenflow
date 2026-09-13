@@ -1,190 +1,328 @@
-import { useUser } from "../hooks/useUser";
+import React, { useMemo } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useUser } from "../hooks/useUser";
+import StudyTimer from "../components/StudyTimer";
 
-function Home() {
-  const { user } = useAuth();
-  const { userData } = useUser();
-  const navigate = useNavigate();
+// Level thresholds — mirrors the XP table used across the app
+const LEVELS = [
+  { name: "Initiate", min: 0 },
+  { name: "Scholar", min: 100 },
+  { name: "Strategist", min: 250 },
+  { name: "Grinder", min: 500 },
+  { name: "Sharpshooter", min: 900 },
+  { name: "Vanguard", min: 1400 },
+  { name: "Champion", min: 2000 },
+  { name: "Legend", min: 2700 },
+];
 
-  if (!userData) return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "80vh" }}>
-      <div style={{ fontSize: "40px", animation: "spin 1s linear infinite" }}>⏳</div>
-    </div>
+function getLevelProgress(xp) {
+  const idx = LEVELS.reduce(
+    (acc, lvl, i) => (xp >= lvl.min ? i : acc),
+    0
   );
+  const current = LEVELS[idx];
+  const next = LEVELS[idx + 1];
+  const span = next ? next.min - current.min : 1;
+  const into = next ? xp - current.min : 1;
+  const pct = next ? Math.min(100, Math.round((into / span) * 100)) : 100;
+  return {
+    levelIndex: idx + 1,
+    levelName: current.name,
+    nextName: next ? next.name : null,
+    xpIntoLevel: into,
+    xpToNext: next ? next.min - xp : 0,
+    pct,
+  };
+}
 
-  const xp = userData.xp || 0;
-  const level = userData.level || 1;
-  const streak = userData.streak || 0;
-  const xpThresholds = [0, 100, 250, 500, 900, 1400, 2000, 2700];
-  const nextLevelXP = xpThresholds[level] || 9999;
-  const currentLevelXP = xpThresholds[level - 1] || 0;
-  const progress = Math.min(100, Math.round((xp - currentLevelXP) / (nextLevelXP - currentLevelXP) * 100));
-  const levelNames = ["Initiate", "Apprentice", "Scholar", "Warrior", "Guardian", "Sage", "Master", "Legend"];
-  const levelIcons = ["⚔️", "🛡️", "📖", "🗡️", "🦅", "🔮", "👑", "🌟"];
+function greeting() {
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning";
+  if (h < 17) return "Good afternoon";
+  return "Good evening";
+}
 
-  const quotes = [
-    { text: "Indeed, Allah does not change the condition of a people until they change themselves.", src: "Quran 13:11" },
-    { text: "The best of you are those who are best in character.", src: "Prophet Muhammad ﷺ" },
-    { text: "Seek knowledge from the cradle to the grave.", src: "Islamic Proverb" },
-    { text: "Your body has a right over you.", src: "Prophet Muhammad ﷺ" },
-  ];
-  const quote = quotes[new Date().getDate() % quotes.length];
+// Circular XP ring — the one bold element on the page
+function XPRing({ pct, levelIndex, levelName }) {
+  const size = 156;
+  const stroke = 10;
+  const r = (size - stroke) / 2;
+  const circumference = 2 * Math.PI * r;
+  const offset = circumference - (pct / 100) * circumference;
 
   return (
-    <div style={{ padding: "16px 16px 100px", background: "#EEF2FF", minHeight: "100vh" }}>
-
-      {/* Hero Card */}
-      <div style={{
-        background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 60%, #06b6d4 100%)",
-        borderRadius: "28px",
-        padding: "24px",
-        marginBottom: "16px",
-        position: "relative",
-        overflow: "hidden",
-        boxShadow: "0 12px 40px rgba(99,102,241,0.35)",
-      }}>
-        <div style={{ position: "absolute", top: "-40px", right: "-40px", width: "160px", height: "160px", background: "rgba(255,255,255,0.08)", borderRadius: "50%" }} />
-        <div style={{ position: "absolute", bottom: "-20px", left: "40px", width: "100px", height: "100px", background: "rgba(255,255,255,0.06)", borderRadius: "50%" }} />
-        <div style={{ position: "absolute", top: "20px", right: "20px", width: "60px", height: "60px", background: "rgba(255,255,255,0.1)", borderRadius: "50%" }} />
-
-        <div style={{ position: "relative", zIndex: 1 }}>
-          <p style={{ color: "rgba(255,255,255,0.8)", fontSize: "13px", fontWeight: "600", marginBottom: "4px" }}>
-            👋 Welcome back,
-          </p>
-          <h2 style={{ color: "white", fontSize: "32px", fontWeight: "800", marginBottom: "6px", letterSpacing: "-1px" }}>
-            {user.displayName?.split(" ")[0]}! 🎮
-          </h2>
-          <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "13px", marginBottom: "20px" }}>
-            Ready to level up today?
-          </p>
-
-          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-            <div style={{
-              background: "rgba(255,255,255,0.2)", backdropFilter: "blur(10px)",
-              borderRadius: "100px", padding: "6px 14px",
-              color: "white", fontSize: "12px", fontWeight: "700",
-              border: "1px solid rgba(255,255,255,0.3)",
-            }}>
-              {levelIcons[level - 1]} Level {level} — {levelNames[level - 1]}
-            </div>
-            <div style={{
-              background: "rgba(255,255,255,0.2)", backdropFilter: "blur(10px)",
-              borderRadius: "100px", padding: "6px 14px",
-              color: "white", fontSize: "12px", fontWeight: "700",
-              border: "1px solid rgba(255,255,255,0.3)",
-            }}>
-              🔥 {streak} day streak
-            </div>
-          </div>
-        </div>
+    <div style={{ position: "relative", width: size, height: size }}>
+      <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          stroke="#2A1F3D"
+          strokeWidth={stroke}
+        />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          stroke="#8b5cf6"
+          strokeWidth={stroke}
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+          style={{ transition: "stroke-dashoffset 0.6s ease" }}
+        />
+      </svg>
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <span style={{ fontSize: 30, fontWeight: 700, color: "#F0F4FF", lineHeight: 1 }}>
+          {levelIndex}
+        </span>
+        <span style={{ fontSize: 12, color: "#a78bfa", marginTop: 4 }}>{levelName}</span>
       </div>
-
-      {/* Stats Row */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px", marginBottom: "16px" }}>
-        {[
-          { label: "Total XP", value: xp, icon: "⭐", gradient: "linear-gradient(135deg, #fef3c7, #fde68a)", color: "#d97706", shadow: "rgba(245,158,11,0.2)" },
-          { label: "Streak", value: `${streak}🔥`, icon: "", gradient: "linear-gradient(135deg, #fee2e2, #fecaca)", color: "#dc2626", shadow: "rgba(239,68,68,0.2)" },
-          { label: "Level", value: level, icon: "🏅", gradient: "linear-gradient(135deg, #dcfce7, #bbf7d0)", color: "#16a34a", shadow: "rgba(16,185,129,0.2)" },
-        ].map((stat, i) => (
-          <div key={i} style={{
-            background: stat.gradient,
-            borderRadius: "20px", padding: "16px 10px",
-            textAlign: "center",
-            boxShadow: `0 4px 16px ${stat.shadow}`,
-          }}>
-            <div style={{ fontSize: "24px", marginBottom: "4px" }}>{stat.icon}</div>
-            <div style={{ fontSize: "20px", fontWeight: "800", color: stat.color }}>{stat.value}</div>
-            <div style={{ fontSize: "10px", fontWeight: "700", color: stat.color, opacity: 0.7, marginTop: "2px" }}>{stat.label}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* XP Progress */}
-      <div style={{
-        background: "white", borderRadius: "24px", padding: "20px",
-        marginBottom: "16px",
-        boxShadow: "0 4px 20px rgba(99,102,241,0.08)",
-      }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-          <div>
-            <p style={{ fontSize: "15px", fontWeight: "800", color: "#1e1b4b" }}>XP Progress</p>
-            <p style={{ fontSize: "11px", color: "#94a3b8", marginTop: "2px" }}>
-              {nextLevelXP - xp} XP to {levelNames[level]} {levelIcons[level]}
-            </p>
-          </div>
-          <div style={{
-            background: "#eef2ff", borderRadius: "100px",
-            padding: "6px 14px", color: "#6366f1",
-            fontSize: "13px", fontWeight: "800",
-          }}>
-            {xp} / {nextLevelXP}
-          </div>
-        </div>
-        <div style={{ background: "#eef2ff", borderRadius: "100px", height: "12px" }}>
-          <div style={{
-            width: `${progress}%`, height: "100%",
-            background: "linear-gradient(90deg, #6366f1, #8b5cf6, #06b6d4)",
-            borderRadius: "100px", transition: "width 1s ease",
-            boxShadow: "0 2px 8px rgba(99,102,241,0.4)",
-          }} />
-        </div>
-        <div style={{ display: "flex", justifyContent: "space-between", marginTop: "8px" }}>
-          <span style={{ fontSize: "11px", color: "#94a3b8" }}>Level {level}</span>
-          <span style={{ fontSize: "11px", color: "#94a3b8" }}>Level {level + 1}</span>
-        </div>
-      </div>
-
-      {/* Quick Actions */}
-      <p style={{ fontSize: "16px", fontWeight: "800", color: "#1e1b4b", marginBottom: "12px" }}>
-        Quick Actions 🚀
-      </p>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "16px" }}>
-        {[
-          { icon: "⚔️", label: "Daily Missions", sub: "Complete tasks & earn XP", bg: "linear-gradient(135deg, #6366f1, #8b5cf6)", path: "/missions" },
-          { icon: "👥", label: "My Groups", sub: "Group challenges", bg: "linear-gradient(135deg, #10b981, #06b6d4)", path: "/groups" },
-          { icon: "🏆", label: "Leaderboard", sub: "See your rank", bg: "linear-gradient(135deg, #f59e0b, #ef4444)", path: "/leaderboard" },
-          { icon: "👤", label: "Profile", sub: "Stats & friends", bg: "linear-gradient(135deg, #ec4899, #8b5cf6)", path: "/profile" },
-        ].map((action, i) => (
-          <div
-            key={i}
-            onClick={() => navigate(action.path)}
-            style={{
-              background: action.bg,
-              borderRadius: "22px", padding: "20px 16px",
-              cursor: "pointer", transition: "all 0.2s",
-              boxShadow: "0 6px 20px rgba(0,0,0,0.12)",
-            }}
-            onMouseOver={e => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = "0 12px 28px rgba(0,0,0,0.18)"; }}
-            onMouseOut={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 6px 20px rgba(0,0,0,0.12)"; }}
-          >
-            <div style={{ fontSize: "32px", marginBottom: "10px" }}>{action.icon}</div>
-            <div style={{ color: "white", fontSize: "14px", fontWeight: "800", marginBottom: "3px" }}>{action.label}</div>
-            <div style={{ color: "rgba(255,255,255,0.75)", fontSize: "11px", fontWeight: "500" }}>{action.sub}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Daily Quote */}
-      <div style={{
-        background: "linear-gradient(135deg, #fdf4ff, #ede9fe)",
-        border: "1px solid #ddd6fe",
-        borderRadius: "24px", padding: "20px",
-        boxShadow: "0 4px 16px rgba(139,92,246,0.1)",
-      }}>
-        <p style={{ fontSize: "12px", color: "#7c3aed", fontWeight: "700", marginBottom: "8px", letterSpacing: "0.5px" }}>
-          💜 DAILY REMINDER
-        </p>
-        <p style={{ fontSize: "14px", color: "#4c1d95", fontWeight: "500", lineHeight: "1.7", fontStyle: "italic" }}>
-          "{quote.text}"
-        </p>
-        <p style={{ fontSize: "12px", color: "#a78bfa", marginTop: "10px", fontWeight: "700" }}>
-          — {quote.src}
-        </p>
-      </div>
-
     </div>
   );
 }
 
-export default Home;
+function TaskRow({ task, onToggle }) {
+  return (
+    <div
+      onClick={() => onToggle(task.id)}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 12,
+        padding: "14px 16px",
+        background: task.done ? "rgba(139,92,246,0.08)" : "#160F26",
+        border: "1px solid rgba(139,92,246,0.15)",
+        borderRadius: 14,
+        cursor: "pointer",
+      }}
+    >
+      <div
+        style={{
+          width: 22,
+          height: 22,
+          borderRadius: 7,
+          border: `2px solid ${task.done ? "#8b5cf6" : "#4b5563"}`,
+          background: task.done ? "#8b5cf6" : "transparent",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexShrink: 0,
+        }}
+      >
+        {task.done && (
+          <span style={{ color: "#F0F4FF", fontSize: 13, lineHeight: 1 }}>✓</span>
+        )}
+      </div>
+      <span
+        style={{
+          flex: 1,
+          color: task.done ? "#4b5563" : "#F0F4FF",
+          textDecoration: task.done ? "line-through" : "none",
+          fontSize: 15,
+        }}
+      >
+        {task.title}
+      </span>
+      <span style={{ color: "#818cf8", fontSize: 13, fontWeight: 600 }}>
+        +{task.xp} XP
+      </span>
+    </div>
+  );
+}
+
+function ContestCard({ contest }) {
+  const pct = contest.total
+    ? Math.round((contest.completed / contest.total) * 100)
+    : 0;
+  return (
+    <Link
+      to={`/contests/${contest.id}`}
+      style={{
+        minWidth: 200,
+        padding: 16,
+        borderRadius: 16,
+        background: "linear-gradient(160deg, #1A1229 0%, #160F26 100%)",
+        border: "1px solid rgba(139,92,246,0.2)",
+        textDecoration: "none",
+        display: "flex",
+        flexDirection: "column",
+        gap: 10,
+      }}
+    >
+      <span style={{ color: "#F0F4FF", fontWeight: 600, fontSize: 15 }}>
+        {contest.name}
+      </span>
+      <span style={{ color: "#a78bfa", fontSize: 12 }}>{contest.subject}</span>
+      <div
+        style={{
+          height: 6,
+          borderRadius: 999,
+          background: "#2A1F3D",
+          overflow: "hidden",
+        }}
+      >
+        <div
+          style={{
+            width: `${pct}%`,
+            height: "100%",
+            background: "#8b5cf6",
+            borderRadius: 999,
+          }}
+        />
+      </div>
+      <span style={{ color: "#4b5563", fontSize: 12 }}>
+        {contest.completed}/{contest.total} tasks today
+      </span>
+    </Link>
+  );
+}
+
+export default function Home() {
+  const { user } = useAuth();
+  const {
+    xp = 0,
+    streak = 0,
+    personalTasks = [],
+    activeContests = [],
+    toggleTask,
+    loading,
+  } = useUser();
+
+  const progress = useMemo(() => getLevelProgress(xp), [xp]);
+
+  if (loading) {
+    return (
+      <div style={styles.page}>
+        <span style={{ color: "#4b5563" }}>Loading your dashboard…</span>
+      </div>
+    );
+  }
+
+  return (
+    <div style={styles.page}>
+      <div style={styles.header}>
+        <div>
+          <p style={styles.greeting}>
+            {greeting()}, {user?.name || "there"}
+          </p>
+          <p style={styles.subGreeting}>
+            {personalTasks.filter((t) => !t.done).length} tasks left today
+          </p>
+        </div>
+        {streak > 0 && (
+          <div style={styles.streakPill}>
+            <span>🔥</span>
+            <span style={{ fontWeight: 700 }}>{streak}</span>
+          </div>
+        )}
+      </div>
+
+      <div style={styles.ringSection}>
+        <XPRing
+          pct={progress.pct}
+          levelIndex={progress.levelIndex}
+          levelName={progress.levelName}
+        />
+        <div style={{ marginTop: 12, textAlign: "center" }}>
+          {progress.nextName ? (
+            <span style={{ color: "#4b5563", fontSize: 13 }}>
+              {progress.xpToNext} XP to {progress.nextName}
+            </span>
+          ) : (
+            <span style={{ color: "#a78bfa", fontSize: 13 }}>Max level reached</span>
+          )}
+        </div>
+      </div>
+
+      <StudyTimer onSessionEnd={(seconds) => console.log("studied", seconds, "sec")} />
+
+      <section style={styles.section}>
+        <h2 style={styles.sectionTitle}>Today's focus</h2>
+        {personalTasks.length === 0 ? (
+          <p style={styles.emptyText}>
+            No tasks yet. Add one to start earning XP today.
+          </p>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {personalTasks.map((task) => (
+              <TaskRow key={task.id} task={task} onToggle={toggleTask} />
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section style={styles.section}>
+        <div style={styles.sectionHeaderRow}>
+          <h2 style={styles.sectionTitle}>Your contests</h2>
+          <Link to="/contests" style={styles.viewAllLink}>
+            View all
+          </Link>
+        </div>
+        {activeContests.length === 0 ? (
+          <p style={styles.emptyText}>
+            You're not in a contest yet. Join or start one to compete.
+          </p>
+        ) : (
+          <div style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 4 }}>
+            {activeContests.map((c) => (
+              <ContestCard key={c.id} contest={c} />
+            ))}
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
+
+const styles = {
+  page: {
+    minHeight: "100vh",
+    background: "#0F0A1E",
+    padding: "24px 20px 100px",
+    fontFamily: "'Plus Jakarta Sans', sans-serif",
+    display: "flex",
+    flexDirection: "column",
+    gap: 28,
+  },
+  header: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+  },
+  greeting: { color: "#F0F4FF", fontSize: 20, fontWeight: 700, margin: 0 },
+  subGreeting: { color: "#4b5563", fontSize: 13, margin: "4px 0 0" },
+  streakPill: {
+    display: "flex",
+    alignItems: "center",
+    gap: 6,
+    background: "#1A1229",
+    border: "1px solid rgba(139,92,246,0.25)",
+    borderRadius: 999,
+    padding: "6px 12px",
+    color: "#F0F4FF",
+    fontSize: 14,
+  },
+  ringSection: { display: "flex", flexDirection: "column", alignItems: "center" },
+  section: { display: "flex", flexDirection: "column", gap: 14 },
+  sectionHeaderRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  sectionTitle: { color: "#F0F4FF", fontSize: 17, fontWeight: 600, margin: 0 },
+  viewAllLink: { color: "#818cf8", fontSize: 13, textDecoration: "none" },
+  emptyText: { color: "#4b5563", fontSize: 14, margin: 0 },
+};

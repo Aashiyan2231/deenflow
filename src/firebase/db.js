@@ -1,248 +1,207 @@
-import { db } from "../firebase";
 import {
-  doc, setDoc, getDoc, updateDoc,
-  arrayUnion, arrayRemove, collection,
-  query, where, getDocs, addDoc, serverTimestamp,
-  orderBy, limit
+  addDoc,
+  arrayRemove,
+  arrayUnion,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  increment,
+  query,
+  serverTimestamp,
+  updateDoc,
+  where,
 } from "firebase/firestore";
+import { db } from "../firebase";
 
-// ── USER ──
-export async function createUserIfNotExists(user) {
-  const userRef = doc(db, "users", user.uid);
-  const userSnap = await getDoc(userRef);
-  if (!userSnap.exists()) {
-    const friendCode = user.uid.slice(0, 8).toUpperCase();
-    await setDoc(userRef, {
-      name: user.displayName,
-      email: user.email,
-      photo: user.photoURL,
-      xp: 0,
-      level: 1,
-      streak: 0,
-      friendCode,
-      friends: [],
-      sentRequests: [],
-      receivedRequests: [],
-      groups: [],
-      createdAt: serverTimestamp(),
-    });
-  }
-}
-
-// ── FRIEND SYSTEM ──
-export async function sendFriendRequest(currentUser, friendCode) {
-  const q = query(collection(db, "users"), where("friendCode", "==", friendCode.toUpperCase()));
-  const snap = await getDocs(q);
-  if (snap.empty) return { error: "No player found with this code!" };
-  const friendDoc = snap.docs[0];
-  const friendId = friendDoc.id;
-  const friendData = friendDoc.data();
-  if (friendId === currentUser.uid) return { error: "You can't add yourself!" };
-  if (friendData.friends?.includes(currentUser.uid)) return { error: "Already friends!" };
-  if (friendData.receivedRequests?.includes(currentUser.uid)) return { error: "Request already sent!" };
-  await updateDoc(doc(db, "users", friendId), { receivedRequests: arrayUnion(currentUser.uid) });
-  await updateDoc(doc(db, "users", currentUser.uid), { sentRequests: arrayUnion(friendId) });
-  return { success: `Friend request sent to ${friendData.name}!` };
-}
-
-export async function acceptFriendRequest(currentUserId, friendId) {
-  await updateDoc(doc(db, "users", currentUserId), {
-    friends: arrayUnion(friendId),
-    receivedRequests: arrayRemove(friendId),
-  });
-  await updateDoc(doc(db, "users", friendId), {
-    friends: arrayUnion(currentUserId),
-    sentRequests: arrayRemove(currentUserId),
-  });
-}
-
-export async function declineFriendRequest(currentUserId, friendId) {
-  await updateDoc(doc(db, "users", currentUserId), { receivedRequests: arrayRemove(friendId) });
-  await updateDoc(doc(db, "users", friendId), { sentRequests: arrayRemove(currentUserId) });
-}
-
-export async function getUserById(uid) {
-  const snap = await getDoc(doc(db, "users", uid));
-  if (snap.exists()) return { id: snap.id, ...snap.data() };
-  return null;
-}
-
-// ── GROUP SYSTEM ──
-function generateCode() {
+function generateInviteCode() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let code = "";
-  for (let i = 0; i < 8; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  for (let i = 0; i < 6; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
   return code;
 }
 
-export async function createGroup(user, groupName, subject) {
-  let inviteCode;
-  let codeExists = true;
-  while (codeExists) {
-    inviteCode = generateCode();
-    const q = query(collection(db, "groups"), where("inviteCode", "==", inviteCode));
-    const snap = await getDocs(q);
-    codeExists = !snap.empty;
-  }
+// ---------- Personal tasks ----------
 
-  const groupRef = await addDoc(collection(db, "groups"), {
-    name: groupName,
+export async function addPersonalTask({ title, xp }) {
+  const uid = JSON.parse(localStorage.getItem("studybattle_user") || "{}").uid;
+  if (!uid) throw new Error("Not logged in");
+  await addDoc(collection(db, "users", uid, "personalMissions"), {
+    title,
+    xp,
+    createdAt: serverTimestamp(),
+  });
+}
+
+// ---------- Contests (groups) ----------
+
+export async function createGroup({ name, subject, adminId, adminName, visibility = "private" }) {
+  const inviteCode = generateInviteCode();
+  const ref = await addDoc(collection(db, "groups"), {
+    name,
     subject,
     inviteCode,
-    adminId: user.uid,
-    adminName: user.displayName,
-    members: [user.uid],
-    missions: { deen: [], duniya: [], health: [] },
+    adminId,
+    adminName,
+    members: [adminId],
+    missions: { tasks: [] },
     status: "waiting",
-    createdAt: serverTimestamp(),
+    visibility, // "public" | "private"
     startDate: null,
-    lastVoiceNote: null, // tracks latest voice note for NEW badge
+    createdAt: serverTimestamp(),
   });
 
-  await updateDoc(doc(db, "users", user.uid), {
-    groups: arrayUnion(groupRef.id),
+  await updateDoc(doc(db, "users", adminId), {
+    groups: arrayUnion(ref.id),
   });
 
-  return { success: true, groupId: groupRef.id, inviteCode };
+  return ref.id;
 }
 
-export async function joinGroup(user, inviteCode) {
-  const q = query(collection(db, "groups"), where("inviteCode", "==", inviteCode.toUpperCase()));
+export async function joinGroupByCode(inviteCode, { uid, name }) {
+  const q = query(collection(db, "groups"), where("inviteCode", "==", inviteCode));
   const snap = await getDocs(q);
-  if (snap.empty) return { error: "Invalid invite code!" };
+  if (snap.empty) throw new Error("Invalid invite code");
 
   const groupDoc = snap.docs[0];
-  const groupId = groupDoc.id;
-  const groupData = groupDoc.data();
-
-  if (groupData.members.includes(user.uid)) return { error: "You are already in this group!" };
-  if (groupData.status === "ended") return { error: "This challenge has already ended!" };
-
-  await updateDoc(doc(db, "groups", groupId), {
-    members: arrayUnion(user.uid),
+  await updateDoc(doc(db, "groups", groupDoc.id), {
+    members: arrayUnion(uid),
+  });
+  await updateDoc(doc(db, "users", uid), {
+    groups: arrayUnion(groupDoc.id),
   });
 
-  await updateDoc(doc(db, "users", user.uid), {
-    groups: arrayUnion(groupId),
-  });
-
-  return { success: true, groupId, groupName: groupData.name };
+  return groupDoc.id;
 }
 
-export async function getGroupById(groupId) {
-  const snap = await getDoc(doc(db, "groups", groupId));
-  if (snap.exists()) return { id: snap.id, ...snap.data() };
-  return null;
-}
+export async function addTaskToGroup(groupId, { title, xp }) {
+  const ref = doc(db, "groups", groupId);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) throw new Error("Contest not found");
 
-export async function addMissionToGroup(groupId, category, mission) {
-  const groupRef = doc(db, "groups", groupId);
-  const groupSnap = await getDoc(groupRef);
-  if (!groupSnap.exists()) return { error: "Group not found!" };
-
-  const missions = groupSnap.data().missions || { deen: [], duniya: [], health: [] };
-  const updatedCategory = [...(missions[category] || []), {
-    id: Date.now().toString(),
-    title: mission.title,
-    xp: mission.xp,
-    category,
-  }];
-
-  await updateDoc(groupRef, {
-    [`missions.${category}`]: updatedCategory,
-  });
-
-  return { success: true };
-}
-
-export async function removeMissionFromGroup(groupId, category, missionId) {
-  const groupRef = doc(db, "groups", groupId);
-  const groupSnap = await getDoc(groupRef);
-  if (!groupSnap.exists()) return;
-
-  const missions = groupSnap.data().missions || { deen: [], duniya: [], health: [] };
-  const updated = (missions[category] || []).filter(m => m.id !== missionId);
-
-  await updateDoc(groupRef, {
-    [`missions.${category}`]: updated,
+  const current = snap.data().missions?.tasks || [];
+  const newTask = { id: `t_${Date.now()}`, title, xp };
+  await updateDoc(ref, {
+    missions: { tasks: [...current, newTask] },
   });
 }
 
-export async function startChallenge(groupId) {
+export async function startGroupChallenge(groupId) {
   await updateDoc(doc(db, "groups", groupId), {
     status: "active",
     startDate: serverTimestamp(),
   });
 }
 
-// ── VOICE NOTES ──
+// Ends the contest and awards the winner (member with the most completed
+// tasks across the contest's task list, counted via each member's
+// completedMissions docs whose id contains this groupId).
+export async function endGroupChallenge(groupId) {
+  const groupRef = doc(db, "groups", groupId);
+  const groupSnap = await getDoc(groupRef);
+  if (!groupSnap.exists()) throw new Error("Contest not found");
 
-// Save voice note metadata to Firestore after upload
-export async function saveVoiceNote(groupId, adminId, adminName, downloadURL, durationSec) {
-  const noteRef = await addDoc(collection(db, "groups", groupId, "voiceNotes"), {
-    adminId,
-    adminName,
-    url: downloadURL,
-    duration: durationSec,
-    createdAt: serverTimestamp(),
+  const group = groupSnap.data();
+  const members = group.members || [];
+
+  let winnerUid = null;
+  let bestCount = -1;
+
+  for (const memberUid of members) {
+    const completionsSnap = await getDocs(
+      collection(db, "users", memberUid, "completedMissions")
+    );
+    const count = completionsSnap.docs.filter((d) =>
+      d.id.includes(`_${groupId}_`)
+    ).length;
+
+    if (count > bestCount) {
+      bestCount = count;
+      winnerUid = memberUid;
+    }
+  }
+
+  await updateDoc(groupRef, {
+    status: "ended",
+    winnerUid: winnerUid || null,
   });
 
-  // Update group doc so members can detect new voice note
-  await updateDoc(doc(db, "groups", groupId), {
-    lastVoiceNote: {
-      id: noteRef.id,
-      url: downloadURL,
-      adminName,
-      createdAt: new Date().toISOString(),
-    },
-  });
+  if (winnerUid) {
+    await updateDoc(doc(db, "users", winnerUid), {
+      contestsWon: increment(1),
+    });
+  }
 
-  return { success: true, id: noteRef.id };
+  return winnerUid;
 }
 
-// Get last 5 voice notes for a group
-export async function getVoiceNotes(groupId) {
-  const q = query(
-    collection(db, "groups", groupId, "voiceNotes"),
-    orderBy("createdAt", "desc"),
-    limit(5)
-  );
+// ---------- Discovery (public contests) ----------
+
+export async function getPublicContests() {
+  const q = query(collection(db, "groups"), where("visibility", "==", "public"));
   const snap = await getDocs(q);
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
 
-// Mark voice note as heard by user (stores in localStorage for simplicity)
-export function markVoiceNoteHeard(groupId, noteId) {
-  const key = `heard_${groupId}_${noteId}`;
-  localStorage.setItem(key, "true");
-}
-
-export function hasHeardVoiceNote(groupId, noteId) {
-  const key = `heard_${groupId}_${noteId}`;
-  return localStorage.getItem(key) === "true";
-}
-// ── GROUP CHAT ──
-export async function sendMessage(groupId, user, text, imageURL = null, replyTo = null) {
-  await addDoc(collection(db, "groups", groupId, "messages"), {
-    text: text || null,
-    imageURL: imageURL || null,
-    senderId: user.uid,
-    senderName: user.displayName,
-    senderPhoto: user.photoURL,
-    replyTo: replyTo || null,
-    reactions: {},
-    createdAt: serverTimestamp(),
+export async function joinPublicContest(groupId, { uid, name }) {
+  await updateDoc(doc(db, "groups", groupId), {
+    members: arrayUnion(uid),
+  });
+  await updateDoc(doc(db, "users", uid), {
+    groups: arrayUnion(groupId),
   });
 }
 
-export async function addReaction(groupId, messageId, userId, emoji) {
-  const msgRef = doc(db, "groups", groupId, "messages", messageId);
-  const snap = await getDoc(msgRef);
-  if (!snap.exists()) return;
-  const reactions = snap.data().reactions || {};
-  const current = reactions[emoji] || [];
-  const updated = current.includes(userId)
-    ? current.filter(id => id !== userId)
-    : [...current, userId];
-  await updateDoc(msgRef, { [`reactions.${emoji}`]: updated });
+// ---------- Friends ----------
+
+export async function getUserById(id) {
+  const snap = await getDoc(doc(db, "users", id));
+  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+}
+
+// Looks up a user by their friendCode and sends them a friend request.
+export async function sendFriendRequest(currentUser, friendCode) {
+  if (friendCode === currentUser.friendCode) {
+    return { error: "That's your own code." };
+  }
+
+  const q = query(collection(db, "users"), where("friendCode", "==", friendCode));
+  const snap = await getDocs(q);
+  if (snap.empty) {
+    return { error: "No user found with that code." };
+  }
+
+  const targetDoc = snap.docs[0];
+  const targetData = targetDoc.data();
+
+  if ((targetData.friends || []).includes(currentUser.uid)) {
+    return { error: "You're already friends." };
+  }
+  if ((targetData.receivedRequests || []).includes(currentUser.uid)) {
+    return { error: "Request already sent." };
+  }
+
+  await updateDoc(doc(db, "users", targetDoc.id), {
+    receivedRequests: arrayUnion(currentUser.uid),
+  });
+
+  return { success: "Friend request sent!" };
+}
+
+export async function acceptFriendRequest(uid, friendId) {
+  await updateDoc(doc(db, "users", uid), {
+    friends: arrayUnion(friendId),
+    receivedRequests: arrayRemove(friendId),
+  });
+  await updateDoc(doc(db, "users", friendId), {
+    friends: arrayUnion(uid),
+  });
+}
+
+export async function declineFriendRequest(uid, friendId) {
+  await updateDoc(doc(db, "users", uid), {
+    receivedRequests: arrayRemove(friendId),
+  });
 }
