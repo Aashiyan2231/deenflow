@@ -267,7 +267,7 @@ export default function Home() {
       <section style={styles.section}>
         <div style={styles.sectionHeaderRow}>
           <h2 style={styles.sectionTitle}>Your contests</h2>
-          <Link to="/contests" style={styles.viewAllLink}>
+          <Link to="/contest" style={styles.viewAllLink}>
             View all
           </Link>
         </div>

@@ -1,7 +1,6 @@
 import { BrowserRouter, Routes, Route, Link, useLocation } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import Home from "./pages/Home.jsx";
-import Tasks from "./pages/Tasks.jsx";
 import Leaderboard from "./pages/Leaderboard.jsx";
 import Profile from "./pages/Profile.jsx";
 import Login from "./pages/Login.jsx";
@@ -21,10 +20,6 @@ function BottomNav() {
       <Link to="/" className={path === "/" ? "active" : ""}>
         <span>🏠</span>
         <span>Home</span>
-      </Link>
-      <Link to="/tasks" className={path === "/tasks" ? "active" : ""}>
-        <span>⚔️</span>
-        <span>Tasks</span>
       </Link>
       <Link to="/contest" className={path === "/contest" || path.startsWith("/contest/") || path.startsWith("/contests/") ? "active" : ""}>
         <span>👥</span>
@@ -81,7 +76,6 @@ function AppInner() {
 
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/tasks" element={<Tasks />} />
         <Route path="/contest" element={<Groups />} />
         <Route path="/contests/:id" element={<GroupDetail />} />
         <Route path="/leaderboard" element={<Leaderboard />} />

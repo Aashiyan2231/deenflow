@@ -76,13 +76,19 @@ export async function joinGroupByCode(inviteCode, { uid, name }) {
   return groupDoc.id;
 }
 
-export async function addTaskToGroup(groupId, { title, xp }) {
+export async function addTaskToGroup(groupId, { title, xp, videoUrl = "" }) {
   const ref = doc(db, "groups", groupId);
   const snap = await getDoc(ref);
   if (!snap.exists()) throw new Error("Contest not found");
 
   const current = snap.data().missions?.tasks || [];
-  const newTask = { id: `t_${Date.now()}`, title, xp };
+  const newTask = {
+    id: `t_${Date.now()}`,
+    title,
+    xp,
+    videoUrl: videoUrl.trim(),
+    videoTitle: title,
+  };
   await updateDoc(ref, {
     missions: { tasks: [...current, newTask] },
   });

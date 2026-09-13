@@ -148,8 +148,15 @@ export function useUser() {
           status: g.status,
           members: g.members,
           adminName: g.adminName,
+          adminId: g.adminId,
+          inviteCode: g.inviteCode,
+          tasks,
+          missions: g.missions,
           completed,
           total: tasks.length,
+          completedTaskIds: tasks
+            .filter((t) => completedIdsToday.has(contestCompletionId(g.id, t.id)))
+            .map((t) => t.id),
         };
       });
   }, [groupsById, completedIdsToday]);
@@ -164,6 +171,10 @@ export function useUser() {
         status: g.status,
         members: g.members,
         adminName: g.adminName,
+        adminId: g.adminId,
+        inviteCode: g.inviteCode,
+        tasks: g.missions?.tasks || [],
+        missions: g.missions,
       })),
     [groupsById]
   );
