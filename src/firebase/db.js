@@ -37,11 +37,27 @@ export async function addPersonalTask({ title, xp }) {
 
 // ---------- Contests (groups) ----------
 
-export async function createGroup({ name, subject, adminId, adminName, visibility = "private" }) {
+export async function createGroup({
+  name,
+  subject,
+  description = "",
+  playlistUrl = "",
+  startDate = "",
+  endDate = "",
+  rules = "",
+  maxParticipants = null,
+  adminId,
+  adminName,
+  visibility = "private",
+}) {
   const inviteCode = generateInviteCode();
   const ref = await addDoc(collection(db, "groups"), {
     name,
     subject,
+    description,
+    playlistUrl,
+    rules,
+    maxParticipants: maxParticipants ? Number(maxParticipants) : null,
     inviteCode,
     adminId,
     adminName,
@@ -49,7 +65,8 @@ export async function createGroup({ name, subject, adminId, adminName, visibilit
     missions: { tasks: [] },
     status: "waiting",
     visibility, // "public" | "private"
-    startDate: null,
+    startDate: startDate || null,
+    endDate: endDate || null,
     createdAt: serverTimestamp(),
   });
 
@@ -66,6 +83,10 @@ export async function joinGroupByCode(inviteCode, { uid, name }) {
   if (snap.empty) throw new Error("Invalid invite code");
 
   const groupDoc = snap.docs[0];
+  const group = groupDoc.data();
+  if (group.maxParticipants && (group.members || []).length >= group.maxParticipants && !(group.members || []).includes(uid)) {
+    throw new Error("This contest is full.");
+  }
   await updateDoc(doc(db, "groups", groupDoc.id), {
     members: arrayUnion(uid),
   });
@@ -94,10 +115,37 @@ export async function addTaskToGroup(groupId, { title, xp, videoUrl = "" }) {
   });
 }
 
+export async function addTasksFromPlaylist(groupId, videos, xpPerVideo) {
+  const ref = doc(db, "groups", groupId);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) throw new Error("Contest not found");
+
+  const current = snap.data().missions?.tasks || [];
+  const tasks = videos.map((video, index) => ({
+    id: `video_${video.videoId}_${Date.now()}_${index}`,
+    title: video.title,
+    videoTitle: video.title,
+    videoId: video.videoId,
+    videoUrl: video.url,
+    thumbnail: video.thumbnail || "",
+    position: video.position ?? index,
+    xp: Number(xpPerVideo) || 0,
+  }));
+
+  await updateDoc(ref, {
+    missions: { tasks: [...current, ...tasks] },
+  });
+  return tasks;
+}
+
+export async function getGroupById(groupId) {
+  const snap = await getDoc(doc(db, "groups", groupId));
+  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+}
+
 export async function startGroupChallenge(groupId) {
   await updateDoc(doc(db, "groups", groupId), {
     status: "active",
-    startDate: serverTimestamp(),
   });
 }
 
@@ -152,6 +200,12 @@ export async function getPublicContests() {
 }
 
 export async function joinPublicContest(groupId, { uid, name }) {
+  const groupSnap = await getDoc(doc(db, "groups", groupId));
+  if (!groupSnap.exists()) throw new Error("Contest not found");
+  const group = groupSnap.data();
+  if (group.maxParticipants && (group.members || []).length >= group.maxParticipants && !(group.members || []).includes(uid)) {
+    throw new Error("This contest is full.");
+  }
   await updateDoc(doc(db, "groups", groupId), {
     members: arrayUnion(uid),
   });

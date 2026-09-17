@@ -13,18 +13,13 @@ function JoinGroup() {
     if (!user || !inviteCode) return;
 
     const doJoin = async () => {
-      const result = await joinGroupByCode(user, inviteCode.toUpperCase());
-      if (result.error) {
-        if (result.error.toLowerCase().includes("already")) {
-          setStatus("already");
-          setTimeout(() => navigate("/contest"), 2000);
-        } else {
-          setStatus("error");
-          setTimeout(() => navigate("/contest"), 3000);
-        }
-      } else {
+      try {
+        const groupId = await joinGroupByCode(inviteCode.toUpperCase(), { uid: user.uid, name: user.name });
         setStatus("success");
-        setTimeout(() => navigate(`/contests/${result.groupId}`), 2000);
+        setTimeout(() => navigate(`/contests/${groupId}`), 2000);
+      } catch {
+        setStatus("error");
+        setTimeout(() => navigate("/contest"), 3000);
       }
     };
 

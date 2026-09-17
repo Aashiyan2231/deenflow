@@ -2,8 +2,10 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useUser } from "../hooks/useUser";
-import { addTaskToGroup, startGroupChallenge, endGroupChallenge } from "../firebase/db";
+import { addTaskToGroup, addTasksFromPlaylist, endGroupChallenge, getGroupById, startGroupChallenge } from "../firebase/db";
 import verifyNote from "../services/verifyNote";
+import { fetchPlaylistVideos } from "../services/youtube";
+import { generateQuestions, verifyAnswers } from "../services/quiz";
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
 
@@ -27,12 +29,39 @@ export default function ContestDetail() {
   const [verificationResults, setVerificationResults] = useState({});
   const [leaderboard, setLeaderboard] = useState([]);
   const [leaderboardLoading, setLeaderboardLoading] = useState(true);
+  const [directContest, setDirectContest] = useState(null);
+  const [gateCode, setGateCode] = useState("");
+  const [importBusy, setImportBusy] = useState(false);
+  const [quizByTask, setQuizByTask] = useState({});
+  const [quizAnswers, setQuizAnswers] = useState({});
+  const [quizLoading, setQuizLoading] = useState(false);
 
   const all = [...contests, ...activeContests];
-  const contest = all.find((c) => c.id === id);
+  const contest = all.find((c) => c.id === id) || directContest;
 
   useEffect(() => {
-    if (loading || !contest) return undefined;
+    if (loading || contests.some((item) => item.id === id) || activeContests.some((item) => item.id === id)) return undefined;
+    let cancelled = false;
+    getGroupById(id).then((group) => {
+      if (!cancelled) setDirectContest(group);
+    }).catch(() => {
+      if (!cancelled) setDirectContest(null);
+    });
+    return () => { cancelled = true; };
+  }, [id, loading, contests, activeContests]);
+
+  useEffect(() => {
+    if (!contest || !user || contest.adminId !== user.uid) return;
+    const today = new Date().toISOString().slice(0, 10);
+    if (contest.status === "waiting" && contest.startDate && contest.startDate <= today) {
+      startGroupChallenge(id).catch(() => {});
+    } else if (contest.status === "active" && contest.endDate && contest.endDate <= today) {
+      endGroupChallenge(id).catch(() => {});
+    }
+  }, [contest, id, user]);
+
+  useEffect(() => {
+    if (loading || !contest || !(contest.members || []).includes(user?.uid)) return undefined;
 
     let cancelled = false;
 
@@ -70,7 +99,7 @@ export default function ContestDetail() {
 
     loadLeaderboard();
     return () => { cancelled = true; };
-  }, [contest, id, loading]);
+  }, [contest, id, loading, user?.uid]);
 
   if (loading) {
     return <div style={styles.page}><span style={{ color: "#4b5563" }}>Loading…</span></div>;
@@ -83,7 +112,19 @@ export default function ContestDetail() {
     );
   }
 
-  const isAdmin = contest.adminId === user?.uid || contest.adminName === user?.name;
+  const isMember = (contest.members || []).includes(user?.uid);
+  if (!isMember && contest.visibility === "private") {
+    return (
+      <div style={styles.page}>
+        <h1 style={styles.title}>Private contest</h1>
+        <p style={styles.subtitle}>This contest is private. Enter its invite code to join.</p>
+        <input style={styles.input} value={gateCode} onChange={(event) => setGateCode(event.target.value.toUpperCase())} placeholder="Invite code" maxLength={6} />
+        <button style={styles.primaryBtn} onClick={() => navigate(`/join/${gateCode}`)} disabled={gateCode.length < 6}>Join with invite code</button>
+      </div>
+    );
+  }
+
+  const isAdmin = contest.adminId === user?.uid;
   const tasks = contest.tasks || contest.missions?.tasks || [];
   const isEnded = contest.status === "ended" || Boolean(winnerUid);
   const completedTaskIds = new Set(contest.completedTaskIds || []);
@@ -125,6 +166,25 @@ export default function ContestDetail() {
     }
   }
 
+  async function handleImportPlaylist() {
+    if (!contest.playlistUrl) {
+      setError("Add a playlist URL to this contest first.");
+      return;
+    }
+    setImportBusy(true);
+    setError("");
+    try {
+      const videos = await fetchPlaylistVideos(contest.playlistUrl);
+      if (!videos.length) throw new Error("No playable videos were found in that playlist.");
+      await addTasksFromPlaylist(id, videos, taskXp);
+      setVerificationMessage(`Imported ${videos.length} videos.`);
+    } catch (e) {
+      setError(e?.message || "Could not import that playlist.");
+    } finally {
+      setImportBusy(false);
+    }
+  }
+
   async function handleEnd() {
     setBusy(true);
     setError("");
@@ -158,14 +218,13 @@ export default function ContestDetail() {
       const verdict = String(result.verdict || "").toUpperCase();
 
       if (verdict === "PASS") {
-        await toggleContestTask(id, task.id, task.xp || 0);
-        setVerificationResults((current) => ({
-          ...current,
-          [task.id]: { verdict, reason: result.reason || "" },
-        }));
-        setVerificationMessage(result.reason || "Notes verified. The next task is unlocked.");
+        setQuizLoading(true);
+        const quiz = await generateQuestions({ groupId: id, taskId: task.id, videoTitle: task.videoTitle || task.title });
+        setQuizByTask((current) => ({ ...current, [task.id]: quiz.questions }));
+        setQuizAnswers((current) => ({ ...current, [task.id]: [] }));
         setNoteTaskId(null);
         setUserNote("");
+        setVerificationMessage("Notes verified. Answer all three questions to unlock the next video.");
       } else {
         setVerificationResults((current) => ({
           ...current,
@@ -178,6 +237,33 @@ export default function ContestDetail() {
       setVerificationMessage("");
     } finally {
       setVerificationBusy(false);
+      setQuizLoading(false);
+    }
+  }
+
+  async function handleQuizSubmit(task) {
+    const answers = quizAnswers[task.id] || [];
+    if (answers.length !== 3 || answers.some((answer) => answer === undefined)) return;
+    setQuizLoading(true);
+    setVerificationError("");
+    try {
+      const result = await verifyAnswers({ groupId: id, taskId: task.id, answers });
+      setQuizResult({ taskId: task.id, ...result });
+      if (result.passed) {
+        await toggleContestTask(id, task.id, task.xp || 0);
+        setVerificationResults((current) => ({
+          ...current,
+          [task.id]: { verdict: "PASS", reason: "Quiz passed." },
+        }));
+        setQuizByTask((current) => ({ ...current, [task.id]: null }));
+        setVerificationMessage(`${result.correct}/${result.total} correct. Video complete and next video unlocked.`);
+      } else {
+        setVerificationError(`${result.correct}/${result.total} correct — need 70% to pass. Try the quiz again.`);
+      }
+    } catch (e) {
+      setVerificationError(e?.message || "Quiz verification failed. Please try again.");
+    } finally {
+      setQuizLoading(false);
     }
   }
 
@@ -207,8 +293,26 @@ export default function ContestDetail() {
       {verificationMessage && <p className="pill pill-pass" style={styles.successMessage}>{verificationMessage}</p>}
       {verificationError && <p className="pill pill-fail" style={styles.errorMessage}>{verificationError}</p>}
 
+      {/* FIX: Import button no longer depends on status === "waiting".
+          It shows any time the admin has a playlist URL saved and no
+          tasks/videos have been imported yet — even if the contest
+          auto-flipped to "active" the moment this page loaded. */}
+      {isAdmin && contest.playlistUrl && tasks.length === 0 && (
+        <div style={styles.panel}>
+          <p style={styles.panelLabel}>Import videos from your playlist</p>
+          <button
+            style={styles.outlineBtn}
+            disabled={importBusy || busy}
+            onClick={handleImportPlaylist}
+          >
+            {importBusy ? "Importing…" : "Import from playlist"}
+          </button>
+        </div>
+      )}
+
       {isAdmin && contest.status === "waiting" && (
         <div style={styles.panel}>
+          <p style={styles.panelLabel}>{contest.startDate || "No start date"} to {contest.endDate || "No end date"}</p>
           <p style={styles.panelLabel}>Add a task</p>
           <input
             style={styles.input}
@@ -239,7 +343,7 @@ export default function ContestDetail() {
         </div>
       )}
 
-      <section className="card" style={styles.leaderboardPanel}>
+      {isMember && <section className="card" style={styles.leaderboardPanel}>
         <div style={styles.leaderboardHeader}>
           <h2 style={styles.panelLabel}>Contest leaderboard</h2>
           <span style={{ color: "#4b5563", fontSize: 12 }}>{tasks.length} videos</span>
@@ -258,7 +362,7 @@ export default function ContestDetail() {
             </div>
           ))
         )}
-      </section>
+      </section>}
 
       {isAdmin && contest.status === "active" && !isEnded && (
         <div style={styles.panel}>
@@ -269,7 +373,7 @@ export default function ContestDetail() {
         </div>
       )}
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      {isMember && <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {tasks.length === 0 ? (
           <p style={{ color: "#4b5563", fontSize: 14 }}>No tasks added yet.</p>
         ) : (
@@ -290,6 +394,7 @@ export default function ContestDetail() {
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  {task.thumbnail && <img src={task.thumbnail} alt="" style={styles.thumbnail} />}
                   <span style={{ flex: 1, color: done || isLocked ? "#4b5563" : "#F0F4FF", fontSize: 15 }}>
                     {task.videoUrl ? (
                       <a href={task.videoUrl} target="_blank" rel="noreferrer" style={styles.videoLink}>
@@ -329,6 +434,23 @@ export default function ContestDetail() {
                         </button>
                       </div>
                     )}
+                    {quizLoading && quizByTask[task.id] === undefined && <p style={styles.subtitle}>Generating quiz…</p>}
+                    {quizByTask[task.id] && (
+                      <div style={styles.quizPanel}>
+                        {quizByTask[task.id].map((question, questionIndex) => (
+                          <fieldset key={question.question} style={styles.question}>
+                            <legend style={styles.questionTitle}>{questionIndex + 1}. {question.question}</legend>
+                            {question.options.map((option, optionIndex) => (
+                              <label key={option} style={styles.option}>
+                                <input type="radio" name={`${task.id}-${questionIndex}`} checked={quizAnswers[task.id]?.[questionIndex] === optionIndex} onChange={() => setQuizAnswers((current) => ({ ...current, [task.id]: current[task.id].map((answer, index) => index === questionIndex ? optionIndex : answer) }))} />
+                                {option}
+                              </label>
+                            ))}
+                          </fieldset>
+                        ))}
+                        <button style={styles.primaryBtn} disabled={quizLoading || (quizAnswers[task.id] || []).length !== 3 || quizAnswers[task.id].some((answer) => answer === undefined)} onClick={() => handleQuizSubmit(task)}>{quizLoading ? "Checking…" : "Submit quiz"}</button>
+                      </div>
+                    )}
                   </div>
                 )}
                 {result?.verdict === "FAIL" && result.reason && (
@@ -338,7 +460,7 @@ export default function ContestDetail() {
             );
           })
         )}
-      </div>
+      </div>}
     </div>
   );
 }
@@ -433,6 +555,11 @@ const styles = {
   errorMessage: { color: "#f87171", fontSize: 13, margin: 0 },
   failReason: { color: "#f87171", fontSize: 13, margin: "10px 0 0" },
   videoLink: { color: "#F0F4FF", textDecoration: "none" },
+  thumbnail: { width: 72, height: 42, objectFit: "cover", borderRadius: 8, flexShrink: 0 },
+  quizPanel: { display: "flex", flexDirection: "column", gap: 14, marginTop: 12, padding: 14, background: "#0F0A1E", border: "1px solid rgba(139,92,246,0.2)", borderRadius: 12 },
+  question: { border: "1px solid rgba(139,92,246,0.15)", borderRadius: 10, padding: 12, display: "flex", flexDirection: "column", gap: 8 },
+  questionTitle: { color: "#F0F4FF", fontSize: 14, fontWeight: 600, padding: "0 4px" },
+  option: { display: "flex", alignItems: "flex-start", gap: 8, color: "#c4b5fd", fontSize: 13, lineHeight: 1.4 },
   leaderboardPanel: {
     display: "flex",
     flexDirection: "column",

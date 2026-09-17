@@ -1,8 +1,19 @@
-import { createContext, useContext, useState, useEffect } from "react";
-import { onAuthStateChanged } from "firebase/auth";
-import { auth, signInAnonymously } from "../firebase";
+import { createContext, useContext, useEffect, useState } from "react";
+import {
+  createUserWithEmailAndPassword,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signOut,
+  updateProfile,
+} from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
+import { auth, db } from "../firebase";
 
-const AuthContext = createContext();
+const AuthContext = createContext(null);
+
+function friendCodeFromUid(uid) {
+  return uid.slice(0, 8).toUpperCase();
+}
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -10,54 +21,54 @@ export function AuthProvider({ children }) {
   const [authError, setAuthError] = useState("");
 
   useEffect(() => {
-    let mounted = true;
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        if (mounted) {
-          setUser({
-            ...firebaseUser,
-            uid: firebaseUser.uid,
-            name: firebaseUser.displayName || "Student",
-          });
-          setAuthReady(true);
-        }
+      if (!firebaseUser) {
+        setUser(null);
+        setAuthReady(true);
         return;
       }
 
-      try {
-        await signInAnonymously(auth);
-      } catch (error) {
-        if (mounted) {
-          setAuthError(error?.message || "Unable to authenticate with Firebase.");
-          setAuthReady(true);
-        }
-      }
+      const name = firebaseUser.displayName || firebaseUser.email?.split("@")[0] || "Student";
+      const sessionUser = { ...firebaseUser, uid: firebaseUser.uid, name, email: firebaseUser.email };
+      setUser(sessionUser);
+      setAuthReady(true);
+
+      await setDoc(doc(db, "users", firebaseUser.uid), {
+        uid: firebaseUser.uid,
+        name,
+        displayName: name,
+        email: firebaseUser.email || "",
+        friendCode: friendCodeFromUid(firebaseUser.uid),
+      }, { merge: true }).catch(() => {});
     });
 
-    return () => {
-      mounted = false;
-      unsubscribe();
-    };
+    return unsubscribe;
   }, []);
 
-  const setUserName = (name) => {
+  async function signUp(email, password, name) {
+    setAuthError("");
+    const credential = await createUserWithEmailAndPassword(auth, email.trim(), password);
+    if (name?.trim()) await updateProfile(credential.user, { displayName: name.trim() });
+  }
+
+  async function signIn(email, password) {
+    setAuthError("");
+    await signInWithEmailAndPassword(auth, email.trim(), password);
+  }
+
+  async function logout() {
+    await signOut(auth);
+  }
+
+  function setUserName(name) {
     setUser((currentUser) => currentUser ? { ...currentUser, name, displayName: name } : currentUser);
-  };
-
-  const logout = () => {
-    // Anonymous auth is restored automatically by the listener if signed out.
-  };
-
-  if (!authReady) {
-    return <div style={styles.loading}>Loading...</div>;
   }
 
-  if (authError) {
-    return <div style={styles.error}>{authError}</div>;
-  }
+  if (!authReady) return <div style={styles.loading}>Loading...</div>;
+  if (authError) return <div style={styles.error}>{authError}</div>;
 
   return (
-    <AuthContext.Provider value={{ user, logout, setUserName }}>
+    <AuthContext.Provider value={{ user, logout, setUserName, signUp, signIn, authError, setAuthError }}>
       {children}
     </AuthContext.Provider>
   );
@@ -68,22 +79,6 @@ export function useAuth() {
 }
 
 const styles = {
-  loading: {
-    minHeight: "100vh",
-    display: "grid",
-    placeItems: "center",
-    background: "#0F0A1E",
-    color: "#F0F4FF",
-    fontFamily: "'Plus Jakarta Sans', sans-serif",
-  },
-  error: {
-    minHeight: "100vh",
-    display: "grid",
-    placeItems: "center",
-    padding: 24,
-    background: "#0F0A1E",
-    color: "#ef4444",
-    fontFamily: "'Plus Jakarta Sans', sans-serif",
-    textAlign: "center",
-  },
+  loading: { minHeight: "100vh", display: "grid", placeItems: "center", background: "#0F0A1E", color: "#F0F4FF", fontFamily: "'Plus Jakarta Sans', sans-serif" },
+  error: { minHeight: "100vh", display: "grid", placeItems: "center", padding: 24, background: "#0F0A1E", color: "#ef4444", fontFamily: "'Plus Jakarta Sans', sans-serif", textAlign: "center" },
 };

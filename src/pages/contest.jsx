@@ -48,7 +48,7 @@ function ContestRow({ contest }) {
             {contest.name}
           </p>
           <p style={{ color: "#4b5563", fontSize: 13, margin: "2px 0 0" }}>
-            {contest.subject} · {contest.members?.length || 0} members
+            {contest.adminName} · {contest.tasks?.length || 0} videos · {contest.members?.length || 0}{contest.maxParticipants ? `/${contest.maxParticipants}` : ""} participants
           </p>
         </div>
         <StatusTag status={contest.status} />
@@ -68,6 +68,13 @@ export default function Contests() {
   const [mode, setMode] = useState(null); // null | "create" | "join"
   const [name, setName] = useState("");
   const [subject, setSubject] = useState("");
+  const [description, setDescription] = useState("");
+  const [playlistUrl, setPlaylistUrl] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [rules, setRules] = useState("");
+  const [maxParticipants, setMaxParticipants] = useState("");
+  const [visibility, setVisibility] = useState("private");
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -83,6 +90,13 @@ export default function Contests() {
       const groupId = await createGroup({
         name: name.trim(),
         subject: subject.trim(),
+        description: description.trim(),
+        playlistUrl: playlistUrl.trim(),
+        startDate,
+        endDate,
+        rules: rules.trim(),
+        maxParticipants,
+        visibility,
         adminId: user.uid,
         adminName: user.name,
       });
@@ -144,6 +158,18 @@ export default function Contests() {
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
               />
+              <textarea style={styles.input} placeholder="Contest description" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
+              <input style={styles.input} type="url" placeholder="YouTube playlist URL" value={playlistUrl} onChange={(e) => setPlaylistUrl(e.target.value)} />
+              <div style={styles.dateRow}>
+                <label style={styles.fieldLabel}>Start date<input style={styles.input} type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} /></label>
+                <label style={styles.fieldLabel}>End date<input style={styles.input} type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} /></label>
+              </div>
+              <textarea style={styles.input} placeholder="Optional contest rules" value={rules} onChange={(e) => setRules(e.target.value)} rows={3} />
+              <input style={styles.input} type="number" min="1" placeholder="Maximum participants (optional)" value={maxParticipants} onChange={(e) => setMaxParticipants(e.target.value)} />
+              <select style={styles.input} value={visibility} onChange={(e) => setVisibility(e.target.value)}>
+                <option value="private">Private - invite code only</option>
+                <option value="public">Public - listed in Discover</option>
+              </select>
             </>
           ) : (
             <input
@@ -240,5 +266,7 @@ const styles = {
     fontSize: 14,
     outline: "none",
   },
+  dateRow: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 },
+  fieldLabel: { color: "#a78bfa", fontSize: 12, display: "flex", flexDirection: "column", gap: 6 },
   emptyText: { color: "#4b5563", fontSize: 14, margin: 0 },
 };

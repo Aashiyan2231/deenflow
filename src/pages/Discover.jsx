@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { getPublicContests, joinPublicContest } from "../firebase/db";
 
 function DiscoverCard({ contest, onJoin, busy }) {
+  const statusColor = contest.status === "active" ? "#8b5cf6" : contest.status === "ended" ? "#4b5563" : "#a78bfa";
   return (
     <div style={styles.card}>
       <div>
@@ -11,9 +12,10 @@ function DiscoverCard({ contest, onJoin, busy }) {
           {contest.name}
         </p>
         <p style={{ color: "#4b5563", fontSize: 13, margin: "2px 0 0" }}>
-          {contest.subject} · {contest.members?.length || 0} joined
+          {contest.adminName} · {contest.missions?.tasks?.length || contest.tasks?.length || 0} videos · {contest.members?.length || 0}{contest.maxParticipants ? `/${contest.maxParticipants}` : ""} participants
         </p>
       </div>
+      <span style={{ color: statusColor, fontSize: 12, fontWeight: 600 }}>{contest.status || "waiting"}</span>
       <button
         style={styles.joinBtn}
         disabled={busy}
